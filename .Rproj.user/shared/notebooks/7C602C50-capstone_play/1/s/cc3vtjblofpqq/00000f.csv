@@ -1,0 +1,7 @@
+"0",""
+"0","cpc_basin %>% "
+"0","  st_drop_geometry() %>%"
+"0","  dplyr::select(ARTHRITIS,CANCER,CASTHMA,HIGHCHOL,DEPRESSION,STROKE,OBESITY,DIABETES,CHD,pct_old_homes) %>%"
+"0","  drop_na() %>%"
+"0","  cor() %>%"
+"0","  corrplot(addCoef.col = ""black"", number.cex = 0.7)"

@@ -1,0 +1,15 @@
+"0","basin_tracts_2 %>% "
+"0","  st_drop_geometry() %>%"
+"0","  dplyr::select(PM25,OZONE,DSLPM,AIR_CANCER,RESP,PTRAF) %>%"
+"0","  correlate() %>% "
+"0","  autoplot() +"
+"0","  geom_text(aes(label = round(r,digits=2)), size = 3.5, order = ""hclust"", type = ""upper"", tl.cex = 3)"
+"2","Correlation computed with
+[36m•[39m Method: 'pearson'
+[36m•[39m Missing treated using: 'pairwise.complete.obs'"
+"2","Registered S3 methods overwritten by 'registry':
+  method               from 
+  print.registry_field proxy
+  print.registry_entry proxy
+"
+"2","Warning: [38;5;232mIgnoring unknown parameters: `order`, `type`, and `tl.cex`[39m"

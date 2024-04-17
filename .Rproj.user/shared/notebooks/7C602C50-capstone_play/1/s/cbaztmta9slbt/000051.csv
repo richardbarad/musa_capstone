@@ -1,0 +1,7 @@
+"0","clusters <- kmeans(basin_tracts_final_scalled, centers=9, nstart=25)$cluster"
+"2","Warning: did not converge in 10 iterations"
+"0","results <- cbind(basin_tracts_4 %>% select('geometry'),basin_tracts_final_scalled,clusters)"
+"0",""
+"0","ggplot()+"
+"0","  geom_sf(data=results,aes(fill=as.factor(clusters)),color='transparent')+"
+"0","  theme_void()"

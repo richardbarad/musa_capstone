@@ -1,0 +1,26 @@
+"0","PA_flood <- st_read('Data/PA_Flood_Hazard_Zone.shp') %>% st_intersection(.,states1 %>% filter(NAME == 'Pennsylvania'))
+"
+"1","Reading layer `"
+"1","PA_Flood_Hazard_Zone"
+"1","' from data source "
+"1","`"
+"1","C:\Users\richa\GitHub\musa_capstone\Data\PA_Flood_Hazard_Zone.shp"
+"1","' "
+"1","using driver `"
+"1","ESRI Shapefile"
+"1","'"
+"1","
+"
+"1","Simple feature collection with 95994 features and 22 fields"
+"1","
+"
+"1","Geometry type: MULTIPOLYGON
+"
+"1","Dimension:     XY
+"
+"1","Bounding box:  "
+"1","xmin: -80.51943 ymin: 39.71983 xmax: -74.68957 ymax: 42.27147"
+"1","
+"
+"1","Geodetic CRS:  NAD83
+"

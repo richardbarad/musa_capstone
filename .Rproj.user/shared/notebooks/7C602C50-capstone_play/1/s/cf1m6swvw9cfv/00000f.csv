@@ -1,0 +1,6 @@
+"0",""
+"0","zone_values <- read.csv('fire.csv')"
+"0",""
+"0","basin_tracts_4 <- basin_tracts_4 %>%"
+"0","  mutate(fire = zone_values$BP_PA * 100) %>%"
+"0","  drop_na()"

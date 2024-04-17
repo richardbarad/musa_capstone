@@ -1,0 +1,5 @@
+"0",""
+"0","g <- arrangeGrob(nrow=2,m1,m2,m3,m4) #generates g"
+"0",""
+"0","ggsave('socio_demographics.png',g)"
+"2","[38;5;232mSaving 6.02 x 6.02 in image[39m"

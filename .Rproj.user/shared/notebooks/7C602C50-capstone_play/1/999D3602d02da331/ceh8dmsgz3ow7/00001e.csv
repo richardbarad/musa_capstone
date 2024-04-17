@@ -1,0 +1,7 @@
+"0","flood_study_area <- rbind(PA_flood,DE_flood,NJ_flood) %>% 
+  st_transform(26918) %>%
+  .[st_intersects(.,basin_tracts_2) %>% lengths > 0, ] %>%
+  st_union(.)
+"
+"2","
+"

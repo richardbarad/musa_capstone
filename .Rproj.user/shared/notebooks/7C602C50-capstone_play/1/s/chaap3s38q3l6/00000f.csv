@@ -1,0 +1,19 @@
+"0",""
+"0","basin_tracts_3 <- basin_tracts_2 %>% erase_water()"
+"2","Fetching area water data for your dataset's location...
+"
+"2","Erasing water area...
+If this is slow, try a larger area threshold value.
+"
+"0","tracts_flood <- read.csv('tracts_flood.csv') %>%"
+"0","  mutate(GEOID = as.character(GEOID))"
+"0",""
+"0","basin_tracts_4 <- basin_tracts_3 %>%"
+"0","  left_join(.,tracts_flood,by='GEOID') %>%"
+"0","  mutate(flood_area = ifelse(is.na(flood_area),0,flood_area),"
+"0","         area = (as.numeric(st_area(.)) / 1000000),"
+"0","         flood_pct = flood_area / area * 100) %>%"
+"0","  st_drop_geometry() %>%"
+"0","  dplyr::select(GEOID,flood_pct) %>%"
+"0","  right_join(.,basin_tracts_2,by='GEOID') %>%"
+"0","  st_as_sf()"

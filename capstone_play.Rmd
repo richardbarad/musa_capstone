@@ -1,0 +1,604 @@
+---
+title: "Capstone_play"
+author: "Richard Barad"
+date: "2024-02-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tigris)
+library(sf)
+library(httr2)
+library(tidycensus)
+library(sfdep)
+library(RSocrata)
+library(terra)
+library(gridExtra)
+library(corrr)
+library(corrplot)
+library(caret)
+library(NbClust)
+library(flexclust)
+library(kableExtra)
+library(viridis)
+library(RColorBrewer)
+
+options(tigris_use_cache = TRUE)
+
+```
+
+## Determine Study Area
+
+```{r study_area}
+
+states1 <- states() %>%
+  filter(STUSPS %in% c('PA','NJ','DE','NY','MD')) %>% st_transform(26918)
+
+states2 <- states1 %>% filter(STUSPS %in% c('PA','NJ','DE'))
+
+de_river_basin <- st_read('https://services8.arcgis.com/5Wj4rmM3lycu9Zo6/arcgis/rest/services/DRB_SAs/FeatureServer/0/query?f=geojson&where=1=1') %>%
+  st_transform(26918)
+
+
+study_area <- st_intersection(de_river_basin,st_union(states2))
+
+ggplot()+
+  geom_sf(data=study_area,color='transparent',fill='orange')+
+  geom_sf(data=de_river_basin,color='lightblue', fill='transparent',linewidth=1.5)+
+  geom_sf(data=states2,color='black',fill='transparent')+
+  theme_void()
+
+```
+## GET THE CENSUS DATA and will need to join to data above
+
+Start getting some census data.
+
+```{r census_data, echo=FALSE}
+
+#Income, #Language, #Education, #Percent of Income on Rent
+
+vars <- c('B02001_001', #Total Population
+          'B02001_002', #White Only
+          'C16002_004', #Spanish, Limited English
+          'C16002_007', #Other Indo-European languages:!!Limited English speaking household
+          'C16002_010', #Asian and Pacific Island languages:!!Limited English speaking household
+          'C16002_013', #Estimate!!Total:!!Other languages:!!Limited English speaking household
+          'C16002_001', #Total
+          'C16002_002', #English Only
+          'B06009_002', #Less than graduate degree
+          'B06009_003', #High School Gradaute
+          'B06009_001', #Total
+          'B06012_002',
+          'B06012_001')
+
+process_acs <- function(state,level,vars,year){
+  census_data <- tidycensus::get_acs(level,
+                        variables = vars,
+                        year = year,
+                        state = state,
+                        geometry = TRUE,
+                        output = 'wide') %>%
+    dplyr::select(ends_with('E'),GEOID)
+  }
+
+census_tract <- rbind(process_acs('DE','tract',vars,2022),process_acs('PA','tract',vars,2022),process_acs('NJ','tract',vars,2022)) %>%
+  st_transform(26918) %>%
+  mutate (pct_minority = 100 - (B02001_002E / B02001_001E * 100),
+            pct_non_english = (C16002_004E + C16002_007E + C16002_010E + C16002_013E)/C16002_001E * 100,
+            pct_no_university = (B06009_002E + B06009_003E) / B06009_001E * 100,
+            pct_poverty =  (B06012_002E / B06012_001E * 100),
+            total_pop = B02001_001E)
+
+#Identify just census tracts in the DE River Basin
+
+basin_tracts <- st_centroid(census_tract) %>%
+  st_intersection(., study_area) %>%
+  dplyr::select(GEOID,NAME,pct_minority,pct_non_english,pct_poverty,pct_no_university,total_pop) %>%
+  st_drop_geometry() %>%
+  left_join(.,census_tract %>% dplyr::select (GEOID,geometry),by='GEOID') %>%
+  st_as_sf()
+
+```
+
+
+## GET EPA DATA
+
+GET DATA FROM EPA FOR THE INDIVIDUAL INDICATORS
+
+```{r ej_screen}
+
+url <- httr2::url_parse("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/EJScreen_StatePctiles_with_AS_CNMI_GU_VI_Tracts/FeatureServer/0/query")
+
+url$query <- list(
+  where = "ST_ABBREV IN ('PA','DE','NJ')",
+  outFields = "ID,STATE_NAME,CNTY_NAME,PM25,OZONE,DSLPM,CANCER,RESP,PTRAF,PNPL,PTSDF,UST,PWDIS",
+  returnGeometry = "false",
+  f = "json"
+)
+
+final_url <- httr2::url_build(url)
+
+epa_data <- sf::st_read(final_url) %>% st_drop_geometry() %>% rename(GEOID = ID) %>% rename (AIR_CANCER = CANCER)
+
+```
+
+## Get Public Health Data
+
+```{r cdc_places}
+
+places_pa <- read.socrata('https://data.cdc.gov/resource/cwsq-ngmh.csv?stateabbr=PA')
+places_de <- read.socrata('https://data.cdc.gov/resource/cwsq-ngmh.csv?stateabbr=DE')
+places_nj <- read.socrata('https://data.cdc.gov/resource/cwsq-ngmh.csv?stateabbr=NJ')
+
+home_vars = c('B25034_001','B25034_011','B25034_010','B25034_009')
+
+home_data <- rbind(process_acs('DE','tract',home_vars,2019),process_acs('PA','tract',home_vars,2019),process_acs('NJ','tract',home_vars,2019)) %>%
+  st_transform(26918) %>%
+  mutate (pct_old_homes = (B25034_011E + B25034_010E + B25034_009E) / B25034_001E * 100) %>%
+  select(pct_old_homes, GEOID) %>%
+  st_drop_geometry()
+
+all_places <- rbind(places_pa,places_de,places_nj) %>%
+  filter(category == 'Health Outcomes') %>%
+  pivot_wider(id_cols='locationname',names_from='measureid',values_from='data_value') %>%
+  rename(GEOID = locationname) %>%
+  mutate(GEOID = as.character(GEOID)) %>%
+  dplyr::select(GEOID,ARTHRITIS,CANCER,CASTHMA,HIGHCHOL,DEPRESSION,STROKE,OBESITY,DIABETES,CHD) %>%
+  left_join(.,home_data,by='GEOID')
+
+tracts2010 <- rbind(tracts(state='PA',year=2019),tracts(state='DE',year=2019),tracts(state='NJ',year=2019)) %>% st_transform(26918)
+
+cpc_basin <- tracts2010 %>%
+  st_centroid() %>%
+  st_intersection(., study_area) %>%
+  st_drop_geometry() %>%
+  left_join(.,tracts2010 %>% dplyr::select (GEOID,geometry),by='GEOID') %>%
+  st_as_sf() %>%
+  select('STATEFP','GEOID','geometry') %>%
+  left_join(.,all_places,by='GEOID') %>%
+  drop_na()
+
+  
+```
+
+## CDC Maps
+
+``` {r correlation2}
+
+cpc_basin %>% 
+  st_drop_geometry() %>%
+  dplyr::select(ARTHRITIS,CANCER,CASTHMA,HIGHCHOL,DEPRESSION,STROKE,OBESITY,DIABETES,CHD,pct_old_homes) %>%
+  drop_na() %>%
+  cor() %>%
+  corrplot(addCoef.col = "black", number.cex = 0.7)
+
+ggsave('cdc_plot.png')
+
+```
+
+``` {r cdc_index}
+cpc_no_geom <- cpc_basin %>%
+  st_drop_geometry() %>%
+  dplyr::select(ARTHRITIS,CANCER,CASTHMA,HIGHCHOL,DEPRESSION,STROKE,OBESITY,DIABETES,CHD,pct_old_homes)
+
+process <- preProcess(cpc_no_geom, method=c("range"))
+
+health_index <- predict(process, cpc_no_geom) %>% rowMeans() 
+
+min <- min(health_index)
+
+max <- max(health_index)
+
+health_hazard_index <- (health_index - min) / (max - min) 
+                      
+cpc_basin <- cbind(cpc_basin,health_hazard_index)
+```
+
+
+``` {r fig.width=6,fig.height=8}
+
+boundings <- st_bbox(basin_tracts)
+xmin = boundings[1]
+ymin = boundings[2]
+xmax = boundings[3]
+ymax = boundings[4]
+
+states_map <- states1 %>% erase_water(area_threshold=0.99)
+
+ggplot()+
+  geom_sf(data=states_map,fill='gray95',color='transparent')+
+  geom_sf(data=cpc_basin,aes(fill= cut(health_hazard_index,breaks= c(-1,0.3,0.4,0.5,0.6,0.7,1.1))),linewidth=0.2,color='transparent')+
+  scale_fill_brewer(palette='Oranges',name='Health Hazard Index', labels = c('<0.3','0.31 - 0.4','0.41 - 0.5','0.51 - 0.6','0.61 - 0.7','>0.7'))+
+  geom_sf(data=states1,fill='transparent',color='gray10',linewidth=0.5)+
+  xlim(xmin,xmax)+
+  ylim(ymin,ymax)+
+  theme_void()+
+  theme(panel.background = element_rect(fill = '#d3f6ff',color='transparent'))
+
+ggsave('health.png')
+
+```
+
+
+# Join Together Census, EPA, and CDC Datasets, filter out areas with no population
+
+```{r join_data}
+
+basin_tracts_2 <- left_join(basin_tracts,epa_data,by='GEOID') %>% #Join tracts to EPA data
+  filter(total_pop > 0) %>% #Remove tracts with no population
+  mutate(pct_non_english = ifelse(is.nan(pct_non_english),NA,pct_non_english), #Turn nan to NA where denominator was zero.
+         pct_poverty = ifelse(is.nan(pct_poverty),NA,pct_poverty)) #Turn nan to NA where denominator was zero.
+
+boundary_changes <- read.csv('Data/Boundary_Changes.csv') 
+
+basin_tracts_2 <- boundary_changes %>%
+  select(GEOID_TRACT_20,AREALAND_TRACT_20,GEOID_TRACT_10,AREALAND_TRACT_10,AREALAND_PART) %>%
+  mutate(pct20 = round(AREALAND_PART / AREALAND_TRACT_20,2),
+         GEOID_TRACT_10 = as.character(GEOID_TRACT_10),
+         GEOID_TRACT_20 = as.character(GEOID_TRACT_20)) %>% 
+  right_join(.,cpc_basin %>% select(health_hazard_index,GEOID),by=join_by(GEOID_TRACT_10==GEOID)) %>%
+  mutate(weighted_index = round(pct20 * health_hazard_index,2)) %>%
+  st_drop_geometry() %>%
+  group_by(GEOID_TRACT_20) %>% 
+  summarise(health_hazard_index = sum(weighted_index)) %>%
+  rename(GEOID = GEOID_TRACT_20) %>%
+  left_join(basin_tracts_2,.,by='GEOID')
+
+basin_tracts_2_4269 <- basin_tracts_2 %>% st_transform(4269)
+```
+
+# Pollution Analysis
+
+``` {r correlation2}
+basin_tracts_2 %>% 
+  st_drop_geometry() %>%
+  dplyr::select(PM25,OZONE,DSLPM,AIR_CANCER,RESP,PTRAF) %>%
+  correlate() %>% 
+  autoplot() +
+  geom_text(aes(label = round(r,digits=2)), size = 3.5, order = "hclust", type = "upper", tl.cex = 3)
+
+ggsave('corplot1.png')
+
+```
+
+``` {r pollution_index}
+
+basin_air_no_geom <- basin_tracts_2 %>%
+  st_drop_geometry() %>%
+  dplyr::select(PM25,OZONE,DSLPM,AIR_CANCER,RESP,PTRAF)
+
+process <- preProcess(basin_air_no_geom, method=c("range"))
+
+air_index <- predict(process, basin_air_no_geom) %>% rowMeans() 
+
+basin_tracts_2 <- cbind(basin_tracts_2,air_index)
+```
+
+```{r,fig.width=10,fig.height=8}
+
+create_map1 <- function(col,t){
+  ggplot()+  
+    geom_sf(data=states_map,fill='gray95',color='transparent')+
+    geom_sf(data=basin_tracts_2,aes(fill={{col}}),color='transparent')+
+    scale_fill_viridis_c(option='rocket',direction=-1)+
+    geom_sf(data=states1,fill='transparent',color='gray20',linewidth=0.5)+
+    xlim(xmin,xmax)+
+    ylim(ymin,ymax)+
+    theme_void()+
+    theme(panel.background = element_rect(fill = '#d3f6ff',color='transparent'))+
+    labs(title = t)
+}
+
+m1 <- create_map1(PM25,'Particulate Matter')
+m2 <- create_map1(OZONE,'Ozone')
+m3 <- create_map1(DSLPM,'Disel Particulate Matter')
+m4 <- create_map1(AIR_CANCER,'Air toxics cancer risk')
+m5 <- create_map1(RESP,'Respiratory hazard index')
+m6 <- create_map1(PTRAF,'Traffic Proximity and Volume')
+m7 <- create_map1(air_index,'Air Index')
+
+ggsave('air_index.png',width=3.1,height=5)
+
+grid.arrange(nrow=2,m1,m2,m3,m4,m5,m6)
+
+g <- arrangeGrob(nrow=2,m1,m2,m3,m4,m5,m6) #generates g
+
+ggsave('air.png',g)
+
+```
+
+## Census Analysis
+
+```{r,fig.width=6,fig.height=6}
+
+create_map2 <- function(col,t){
+  ggplot()+  
+    geom_sf(data=states_map,fill='gray95',color='transparent')+
+    geom_sf(data=basin_tracts_2,aes(fill={{col}}),color='transparent')+
+    scale_fill_viridis_c(option='viridis',direction=-1,name='Percent')+
+    geom_sf(data=states1,fill='transparent',color='gray20',linewidth=0.5)+
+    xlim(xmin,xmax)+
+    ylim(ymin,ymax)+
+    theme_void()+
+    theme(panel.background = element_rect(fill = '#d3f6ff',color='transparent'))+
+    labs(title = t)
+}
+
+
+m1 <- create_map2(pct_minority,'Minority Pop.')
+m2 <- create_map2(pct_non_english,'Language Barrier')
+m3 <- create_map2(pct_poverty,'Poverty')
+m4 <- create_map2(pct_no_university,'No University Degree')
+
+
+grid.arrange(nrow=2,m1,m2,m3,m4)
+
+g <- arrangeGrob(nrow=2,m1,m2,m3,m4) #generates g
+
+ggsave('socio_demographics.png',g)
+
+
+```
+
+## Work with Flood plain data
+
+```{r flood_plain, cache=True, eval=FALSE}
+
+PA_flood <- st_read('Data/PA_Flood_Hazard_Zone.shp') %>%
+  .[st_intersects(.,basin_tracts_2_4269) %>% lengths > 0, ]
+
+NJ_flood <- st_read('Data/NJ_Flood_Hazard_Zone.shp')  %>%
+  .[st_intersects(.,basin_tracts_2_4269) %>% lengths > 0, ]
+
+DE_flood <- st_read('Data/DE_Flood_Hazard_Zone.shp')  %>%
+  .[st_intersects(.,basin_tracts_2_4269) %>% lengths > 0, ]
+```
+
+```{r flood_plain2, cache=True, eval=FALSE}
+
+basin_tracts_3 <- basin_tracts_2 %>% erase_water()
+
+flood_study_area <- rbind(PA_flood,DE_flood,NJ_flood) %>% 
+  st_transform(26918) %>%
+  st_union(.) %>%
+  st_cast(.,"POLYGON") %>% st_as_sf() %>% 
+  rename(geometry = x)
+
+tracts_flood <- st_intersection(basin_tracts_3,flood_study_area) %>%
+  mutate(area = st_area(.)) %>%
+  st_drop_geometry() %>%
+  group_by(GEOID) %>% summarise(flood_area = sum(area)) %>%
+  mutate(flood_area = as.numeric(flood_area) / 1000000)
+
+```
+
+
+```{r}
+
+basin_tracts_3 <- basin_tracts_2 %>% erase_water()
+
+tracts_flood <- read.csv('tracts_flood.csv') %>%
+  mutate(GEOID = as.character(GEOID))
+
+basin_tracts_4 <- basin_tracts_3 %>%
+  left_join(.,tracts_flood,by='GEOID') %>%
+  mutate(flood_area = ifelse(is.na(flood_area),0,flood_area),
+         area = (as.numeric(st_area(.)) / 1000000),
+         flood_pct = flood_area / area * 100) %>%
+  st_drop_geometry() %>%
+  dplyr::select(GEOID,flood_pct) %>%
+  right_join(.,basin_tracts_2,by='GEOID') %>%
+  st_as_sf()
+```
+
+
+``` {r, fig.width=3.3,fig.height=5}
+
+ggplot()+
+  geom_sf(data=states_map,fill='gray95',color='transparent')+
+  geom_sf(data=basin_tracts_4,aes(fill=flood_pct),color='transparent')+
+  scale_fill_viridis_c(option='mako',direction=-1,name='Pct. of Tract in Flood Plain')+
+  geom_sf(data=states1,fill='transparent',color='gray20',linewidth=0.5)+
+  xlim(xmin,xmax)+
+  ylim(ymin,ymax)+
+  theme_void()+
+  theme(legend.position="bottom")+
+  theme(panel.background = element_rect(fill = '#d3f6ff',color='transparent'))
+
+ggsave('flood.png')
+```
+
+## Work with fire risk raster data
+
+```{r fire_risk,eval=FALSE}
+
+# Load raster data for different states
+raster_pa <- rast("Data/Fire/BP_PA.tif")
+raster_de <- rast("Data/Fire/BP_DE.tif")
+raster_nj <- rast("Data/Fire/BP_NJ.tif")
+
+# Merge raster data into a single raster layer
+merged_raster <- terra::mosaic(raster_pa, raster_de, raster_nj)
+
+merged_raster <- project(merged_raster,"epsg:26918")
+
+zone_values <- terra::extract(merged_raster, basin_tracts_4, method="simple", fun = mean, na.rm = TRUE)
+
+basin_tracts_4 <- basin_tracts_4 %>%
+  mutate(fire = zone_values$BP_PA * 100) %>%
+  drop_na()
+```
+
+```{r fire_risk_join}
+
+zone_values <- read.csv('fire.csv')
+
+basin_tracts_4 <- basin_tracts_4 %>%
+  mutate(fire = zone_values$BP_PA * 100) %>%
+  drop_na()
+```
+
+```{r fire_map,fig.width=3.3,fig.height=5}
+
+ggplot()+
+  geom_sf(data=states_map,fill='gray95',color='transparent')+
+  geom_sf(data=basin_tracts_4,aes(fill=fire),linewidth=0.2,color='transparent')+
+  scale_fill_viridis_c(option='inferno',direction=-1,name='% Likelihood of a WildFire')+
+  geom_sf(data=states1,fill='transparent',color='gray10',linewidth=0.5)+
+  xlim(xmin,xmax)+
+  ylim(ymin,ymax)+
+  theme_void()+
+  theme(legend.position="bottom")+
+  theme(panel.background = element_rect(fill = '#d3f6ff',color='transparent'))
+
+ggsave('wildfire.png')
+
+
+```
+
+``` {r}
+basin_tracts_final <- basin_tracts_4 %>%
+  select(flood_pct, pct_minority, pct_non_english, pct_poverty, pct_no_university, air_index, PNPL, PTSDF, UST, PWDIS,health_hazard_index) %>%
+  mutate(waste_proximity = PNPL + PTSDF + UST,
+         PWDIS = percent_rank(PWDIS)) %>%
+  rename(Wastewater = PWDIS) %>%
+  select(-PNPL, -PTSDF, -UST) %>%
+  st_drop_geometry() %>%
+  drop_na()
+
+process <- preProcess(basin_tracts_final, method=c("range"))
+
+basin_tracts_final_scalled <- predict(process, basin_tracts_final)
+
+```
+
+
+```{r}
+
+wss <- c()
+for (i in seq(from=2,to=25,by=1)) wss[i] <- sum(kmeans(basin_tracts_final_scalled, centers=i, nstart=25)$withinss)
+
+bind <- cbind(clusters = seq(from=1,to=25,by=1),wss) %>%
+  as.data.frame() %>%
+  dplyr::filter(clusters > 1)
+
+ggplot(data=bind)+
+  geom_line(aes(x=clusters,y=wss),linewidth=0.5,color='gray60')+
+  geom_point(aes(x=clusters,y=wss),size=1.5,color='gray60')+
+  geom_point(data = bind %>% filter(clusters == 9),aes(x=clusters,y=wss,label=clusters),size=2.5,color='red')+
+  geom_text(data = bind %>% filter(clusters != 9),aes(x=clusters + 0.2,y=wss + 10,label=clusters),size=3,color='gray60')+
+  geom_text(data = bind %>% filter(clusters == 9),aes(x=clusters + 0.3,y=wss + 15,label=clusters),size=5,color='red')+
+  scale_x_continuous(breaks=seq(from=2,to=25,by=1))+
+  labs(x='Number of Clusters',y='Within groups sum of squares')+
+  theme_bw()+
+  theme(panel.border = element_blank(),panel.grid.major.x= element_blank(),panel.grid.minor = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
+
+```
+### NbClust
+
++
+
+```{r NbClust, cache=TRUE, results='hide', include = FALSE}
+set.seed(1234)
+nc <- NbClust(basin_tracts_final_scalled , min.nc=2, max.nc=15, method="kmeans", index="all")
+```
+
+```{r}
+par(mfrow=c(1,1))
+barplot(table(nc$Best.n[1,]),
+  	  xlab="Number of Clusters", ylab="Number of Criteria",
+  	  main="Number of Clusters Chosen by 26 Criteria")
+```
+
+
+```{r}
+clusters <- kmeans(basin_tracts_final_scalled, centers=9, nstart=25)$cluster
+
+results <- cbind(basin_tracts_4 %>% select('geometry'),basin_tracts_final_scalled,clusters)
+
+ggplot()+
+  geom_sf(data=results,aes(fill=as.factor(clusters)),color='transparent')+
+  theme_void()
+```
+
+```{r}
+cluster_means <- results %>% group_by(clusters) %>% st_drop_geometry() %>% summarise_all(mean) %>% mutate_if(is.numeric, round, digits=2) 
+
+quantiles <- sapply(basin_tracts_final_scalled, function(x) quantile(x, na.rm = TRUE,probs = c(0.25,0.5,0.75)))
+
+cluster_means %>%
+  kbl() %>%
+  kable_minimal() %>%
+  column_spec(2,background=ifelse(cluster_means$flood_pct > quantiles[3,1],'red','white')) %>%
+  column_spec(3,background=ifelse(cluster_means$pct_minority > quantiles[3,2],'red','white')) %>%
+  column_spec(4,background=ifelse(cluster_means$pct_non_english > quantiles[3,3],'red','white')) %>%
+  column_spec(5,background=ifelse(cluster_means$pct_poverty > quantiles[3,4],'red','white')) %>%
+  column_spec(6,background=ifelse(cluster_means$pct_no_university > quantiles[3,5],'red','white')) %>%
+  column_spec(7,background=ifelse(cluster_means$air_index > quantiles[3,6],'red','white')) %>%
+  column_spec(8,background=ifelse(cluster_means$Wastewater > quantiles[3,7],'red','white')) %>%
+  column_spec(9,background=ifelse(cluster_means$health_hazard_index > quantiles[3,8],'red','white')) %>%
+  column_spec(10,background=ifelse(cluster_means$waste_proximity > quantiles[3,9],'red','white'))
+```
+
+```{r, fig.width=14}
+
+t <- quantiles %>% as_data_frame() %>%
+  cbind(.,stat=c('Q1','Mean','Q3')) %>%
+  pivot_longer(-stat,names_to='variables',values_to='value')
+
+means <- t %>%
+  filter(stat == "Mean")
+
+q3 <- t %>%
+  filter(stat == "Q3")
+
+results_long <- results %>%
+  st_drop_geometry() %>%
+  pivot_longer(-clusters,names_to='variables',values_to='value')
+
+ggplot(data=results_long)+
+  geom_boxplot(aes(x=as.factor(clusters),y=value,fill=as.factor(clusters)))+
+  geom_hline(data=means,aes(yintercept=value),color='orange',linewidth=1)+
+  geom_hline(data=q3,aes(yintercept=value),color='red',linewidth=1)+
+  facet_wrap(~variables,nrow=2)+
+  theme_bw()
+
+ggsave('image1.png')
+
+```
+
+``` {r}
+
+
+cluster_mean <- function(cluster){
+t1 <- results %>%
+  st_drop_geometry() %>%
+  filter(clusters == cluster) %>%
+  summarize(across(-clusters, ~ quantile(., probs = c(0.25, 0.5, 0.75)))) %>%
+  mutate(cluster = cluster) %>%
+  cbind(., stat=c('Q1','Mean','Q3'))}
+
+cluster_stats <- map_dfr(c(1,2,3,4,5,6,7,8,9), ~ cluster_mean(.x)) %>%
+  pivot_longer(cols=c(-cluster,-stat),names_to='variables',values_to='values') %>%
+  left_join(.,t %>% pivot_wider(id_cols=variables,names_from=stat)) %>%
+  mutate(flag = ifelse(stat == 'Mean' & values > Q3, 1, 0),
+         flag = ifelse(stat == 'Q1' & values > Mean,1,0),
+         flag = ifelse(stat == 'Q1' & values > Q3,2,flag)) %>%
+  group_by(variables,cluster) %>% summarize(flag = max(flag))
+```
+
+
+```{r}
+
+results %>% group_by(clusters) %>% tally() %>%
+  st_drop_geometry() %>%
+  kbl() %>%
+  kable_minimal()
+
+```
+
+
+

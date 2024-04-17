@@ -1,0 +1,10 @@
+"0",""
+"0","flood_study_area <- rbind(PA_flood,DE_flood,NJ_flood) %>% "
+"0","  st_transform(26918)"
+"0",""
+"0","basin_tracts_3 <- basin_tracts_2 %>% erase_water()"
+"2","Fetching area water data for your dataset's location...
+"
+"2","Erasing water area...
+If this is slow, try a larger area threshold value.
+"

@@ -1,0 +1,7 @@
+"0","t <- cpc_basin %>%"
+"0","  st_drop_geometry() %>%"
+"0","  dplyr::select(ARTHRITIS,CANCER,CASTHMA,HIGHCHOL,DEPRESSION,STROKE,OBESITY,DIABETES,CHD) %>%"
+"0","  scale() %>%"
+"0","  as.data.frame()"
+"0",""
+"0","cpc_basin$health_index <- scale(rowSums(t) / 9)"

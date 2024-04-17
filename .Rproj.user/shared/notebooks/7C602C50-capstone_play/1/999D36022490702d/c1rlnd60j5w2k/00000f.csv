@@ -1,0 +1,2 @@
+"0",""
+"0","places_pa <- read.socrata('https://data.cdc.gov/resource/cwsq-ngmh.csv?stateabbr=PA')"
