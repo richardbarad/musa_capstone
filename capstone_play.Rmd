@@ -907,8 +907,7 @@ ggsave('outputs/image1.png')
 
 ```
 
-The table below shows the vulnerabilities and hazards that are typically present in census tracts in each cluster. A value of two indicates that the cluster lower quantile (i.e: 25th percentile) exceeds the basin wide upper quantile (i.e: 75th percentile) indicating very high vulnerability. A value of one indicates that either the cluster mean exceeds the global upper quantile or the cluster lower quantile exceeds the global mean indicating high vulnerability. As an example of how to interpret the table below, census tracts in cluster two tend to have a very high proximity to toxic wastewater emissions and a poorer air quality relative to the other census tracts in the basin. Cluster three and six tend to have vulnerability that is near or below the global mean for all variables included in the anlaysis. 
-
+The table below shows the vulnerabilities and hazards that are typically present in census tracts in each cluster. A value of two indicates that the cluster lower quantile (i.e: 25th percentile) exceeds the basin wide upper quantile (i.e: 75th percentile) indicating very high vulnerability. A value of one indicates that either the cluster mean exceeds the global upper quantile or the cluster lower quantile exceeds the global mean indicating high vulnerability. As an example of how to interpret the table below, census tracts in cluster two tend to have a very high proximity to toxic wastewater emissions and a poorer air quality relative to the other census tracts in the basin. Cluster three and six tend to have vulnerability that is near or below the global mean for all variables included in the analysis. 
 
 ``` {r cluster_means, warning=FALSE}
 
@@ -997,7 +996,7 @@ cluster_medians_long <- cluster_medians %>%
 map <- ggplot()+
   geom_sf(data=states_map,fill='gray95',color='transparent')+
   geom_sf(data=results_filt,aes(fill=as.factor(clusters)),color='transparent')+
-  scale_fill_manual(values=color,name='cluster')+
+  scale_fill_manual(values=pal,name='cluster')+
   geom_sf(data=states1,fill='transparent',color='gray10',linewidth=0.5)+
   xlim(xmin,xmax)+
   ylim(ymin,ymax)+
@@ -1026,48 +1025,56 @@ grid.arrange(map,plot,nrow=1,widths=c(6,12))
 cluster_profile(1)
 
 ```
+
 ## Cluster 2
 
 ```{r cluster2, fig.width=12}
 cluster_profile(2)
 
 ```
+
 ## Cluster 3
 
 ```{r cluster3, fig.width=12}
 cluster_profile(3)
 
 ```
+
 ## Cluster 4
 
 ```{r cluster4, fig.width=12}
 cluster_profile(4)
 
 ```
+
 ## Cluster 5
 
 ```{r cluster5, fig.width=12}
 cluster_profile(5)
 
 ```
+
 ## Cluster 6
 
 ```{r cluster6, fig.width=12}
 cluster_profile(6)
 
 ```
+
 ## Cluster 7
 
 ```{r cluster7, fig.width=12}
 cluster_profile(7)
 
 ```
+
 ## Cluster 8
 
 ```{r cluster8, fig.width=12}
 cluster_profile(8)
 
 ```
+
 ## Cluster 9
 
 ```{r cluster9, fig.width=12}
