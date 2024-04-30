@@ -1,4 +1,0 @@
-"0","par(mfrow=c(1,1))"
-"0","barplot(table(nc$Best.n[1,]),"
-"0","  	  xlab=""Number of Clusters"", ylab=""Number of Criteria"","
-"0","  	  main=""Number of Clusters Chosen by 26 Criteria"")"

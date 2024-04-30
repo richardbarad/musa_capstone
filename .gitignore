@@ -1,2 +1,8 @@
-Data/*
 .RData
+.RDataTmp1
+.RDataTmp
+.Rhistory
+capstone_play_cache/*
+capstone_play_files/*
+.Rproj.user/*
+Data/*
