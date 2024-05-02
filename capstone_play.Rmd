@@ -31,7 +31,6 @@ library(kableExtra)
 library(viridis)
 library(RColorBrewer)
 library('ggthemes')
-library(plotly)
 
 options(tigris_use_cache = TRUE)
 
@@ -811,7 +810,8 @@ pal = c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#
 
 clusters <- kmeans(basin_tracts_final_scalled, centers=9, nstart=25)$cluster
 
-results <- cbind(basin_tracts_4 %>% select('geometry'),basin_tracts_final_scalled,clusters)
+results <- cbind(basin_tracts_4 %>% select('geometry'),basin_tracts_final_scalled,clusters) %>%
+  erase_water(0.99)
 
 ggplot()+
   geom_sf(data=states_map,fill='gray95',color='transparent')+
@@ -950,6 +950,7 @@ flags_wide %>%
   
 ```
 
+The chart below shows the number of census tracts included in each cluster. The cluster containing the largest number of census tracts is cluster three which contains 390 census tracts. The smallest cluster is cluster five which only contains 61 census tracts. The mean cluster size is 231 census tracts. 
 
 ```{r cluster_count}
 
@@ -969,7 +970,7 @@ ggplot(data=cluster_count)+
 #This creates a csv file for biquery
 
 results_4326 <- results %>% st_transform('EPSG:4326') %>%
-  mutate(geometry = st_as_text(geometry,EWKT=TRUE)) %>%
+  mutate(geometry = st_as_text(geometry)) %>%
   cbind(basin_tracts_4 %>% st_drop_geometry() %>% select(GEOID,NAME),.) %>%
   st_drop_geometry()
 
@@ -979,7 +980,11 @@ write.csv(results_4326,'results_for_biquery.csv',row.names=FALSE)
 
 # Cluster Profiles
 
+Below are short cluster profiles for each cluster. The cluster profiles include a short paragraph describing the characteristics of the cluster, a map showing the location of the census tracts that are part of the cluster, and a graph showing the median scaled value for each socio-economic and environmental vulnerability factor included in the analysis. The graphs also show how the cluster median compares to the basin wide median value. 
+
 ``` {r cluster_profile_function}
+
+counties <- rbind(tigris::counties(state='PA'),tigris::counties(state='DE'),tigris::counties(state='NJ'))
 
 cluster_profile <- function(cluster){
   results_filt <- results %>%
@@ -997,7 +1002,9 @@ map <- ggplot()+
   geom_sf(data=states_map,fill='gray95',color='transparent')+
   geom_sf(data=results_filt,aes(fill=as.factor(clusters)),color='transparent')+
   scale_fill_manual(values=pal,name='cluster')+
+  geom_sf(data=counties,color='grey70',fill='transparent')+
   geom_sf(data=states1,fill='transparent',color='gray10',linewidth=0.5)+
+  geom_sf_text(data=counties,aes(label=NAME),size=2,color='gray30')+
   xlim(xmin,xmax)+
   ylim(ymin,ymax)+
   theme_void()+
@@ -1020,6 +1027,8 @@ grid.arrange(map,plot,nrow=1,widths=c(6,12))
 ```
 
 ## Cluster 1
+
+The census tracts in cluster one are primarily concentrated in urban areas. The census tracts which are included in cluster one are located in Philadelphia county, Delaware county, Montgomery county, Chest county, and Berks county. Cluster one was flagged for seven out of 10 vulnerabilities. Census tracts in cluster one tend to have a very high Health Hazard Index, very high minority population, and a very high poverty rate relative to the basin wide median value. Census tracts in cluster one also tend to have a high air quality index, high percent of the population with a university degree, high proximity to toxic waste water discharges and high proximity to hazardous waste sites.    
 
 ```{r cluster1, fig.width=12}
 cluster_profile(1)

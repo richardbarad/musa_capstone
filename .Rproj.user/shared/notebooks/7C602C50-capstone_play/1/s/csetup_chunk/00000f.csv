@@ -1,24 +1,113 @@
 "0","knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE)"
 "0",""
 "0","library(tidyverse)"
+"2","Warning: package ‘ggplot2’ was built under R version 4.3.3"
+"2","── [1mAttaching core tidyverse packages[22m ───────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──
+[32m✔[39m [34mdplyr    [39m 1.1.2     [32m✔[39m [34mreadr    [39m 2.1.4
+[32m✔[39m [34mforcats  [39m 1.0.0     [32m✔[39m [34mstringr  [39m 1.5.0
+[32m✔[39m [34mggplot2  [39m 3.5.1     [32m✔[39m [34mtibble   [39m 3.2.1
+[32m✔[39m [34mlubridate[39m 1.9.3     [32m✔[39m [34mtidyr    [39m 1.3.0
+[32m✔[39m [34mpurrr    [39m 1.0.2     "
+"2","── [1mConflicts[22m ─────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+[31m✖[39m [34mdplyr[39m::[32mfilter()[39m masks [34mstats[39m::filter()
+[31m✖[39m [34mdplyr[39m::[32mlag()[39m    masks [34mstats[39m::lag()
+[36mℹ[39m Use the ]8;;http://conflicted.r-lib.org/conflicted package]8;; to force all conflicts to become errors"
 "0","library(tigris)"
+"2","To enable caching of data, set `options(tigris_use_cache = TRUE)`
+in your R script or .Rprofile.
+"
 "0","library(sf)"
+"2","Linking to GEOS 3.11.2, GDAL 3.6.2, PROJ 9.2.0; sf_use_s2() is TRUE
+"
 "0","library(httr2)"
 "0","library(tidycensus)"
 "0","library(sfdep)"
 "0","library(RSocrata)"
 "0","library(terra)"
+"2","terra 1.7.55
+"
+"2","
+Attaching package: ‘terra’
+
+"
+"2","The following object is masked from ‘package:tigris’:
+
+    blocks
+
+"
+"2","The following object is masked from ‘package:tidyr’:
+
+    extract
+
+"
 "0","library(gridExtra)"
+"2","
+Attaching package: ‘gridExtra’
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    combine
+
+"
 "0","library(corrr)"
+"2","
+Attaching package: ‘corrr’
+
+"
+"2","The following object is masked from ‘package:terra’:
+
+    stretch
+
+"
 "0","library(corrplot)"
+"2","corrplot 0.92 loaded
+"
 "0","library(caret)"
+"2","Loading required package: lattice
+"
+"2","
+Attaching package: ‘caret’
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    lift
+
+"
 "0","library(flexclust)"
+"2","Warning: package ‘flexclust’ was built under R version 4.3.2"
+"2","Loading required package: grid
+"
+"2","
+Attaching package: ‘grid’
+
+"
+"2","The following object is masked from ‘package:terra’:
+
+    depth
+
+"
+"2","Loading required package: modeltools
+"
+"2","Loading required package: stats4
+"
 "0","library(kableExtra)"
+"2","
+Attaching package: ‘kableExtra’
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    group_rows
+
+"
 "0","library(viridis)"
+"2","Loading required package: viridisLite
+"
 "0","library(RColorBrewer)"
 "0","library('ggthemes')"
-"0","library(plotly)"
-"0",""
+"2","Warning: package ‘ggthemes’ was built under R version 4.3.3"
 "0","options(tigris_use_cache = TRUE)"
 "0",""
 "0","options(scipen = 999)"
