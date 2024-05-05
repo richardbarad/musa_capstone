@@ -7,3 +7,4 @@ capstone_play_cache/*
 capstone_play_files/*
 .Rproj.user/*
 Data/*
+keys/*

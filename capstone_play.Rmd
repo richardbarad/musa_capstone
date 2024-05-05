@@ -31,6 +31,8 @@ library(kableExtra)
 library(viridis)
 library(RColorBrewer)
 library('ggthemes')
+library(googleCloudStorageR)
+library(bigrquery)
 
 options(tigris_use_cache = TRUE)
 
@@ -966,7 +968,7 @@ ggplot(data=cluster_count)+
   ggtitle('Number of Census Tracts in Each Cluster')
 
 ```
-```{r export_csv}
+```{r big_query, results='hide'}
 #This creates a csv file for biquery
 
 results_4326 <- results %>% st_transform('EPSG:4326') %>%
@@ -974,7 +976,28 @@ results_4326 <- results %>% st_transform('EPSG:4326') %>%
   cbind(basin_tracts_4 %>% st_drop_geometry() %>% select(GEOID,NAME),.) %>%
   st_drop_geometry()
 
-write.csv(results_4326,'results_for_biquery.csv',row.names=FALSE)
+#Authenticate with BigQuery using json credentials
+bq_auth(path='C:/Users/richa/GitHub/musa_capstone/keys/capstone-rb-b0c15ce34dbe.json')
+
+#Upload Contents of results_4326 df to big_query table, overwrite existing table
+bq_table_upload("capstone-rb.results_data.results", values=results_4326, write_disposition = "WRITE_TRUNCATE")
+
+# Define SQL query
+sql_file = 'sql/create_table.sql'
+sql_query <- read_file(sql_file)
+
+# Construct the connection to bigquery
+con <- dbConnect(
+  bigrquery::bigquery(),
+  project = "capstone-rb",
+  dataset = "results_data"
+)
+
+# Send the query to BigQuery
+dbSendQuery(con, sql_query)
+
+# Close the connection
+dbDisconnect(con)
 
 ```
 
