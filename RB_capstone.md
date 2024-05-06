@@ -11,6 +11,18 @@ output:
     number_sections: no
 ---
 
+<style type="text/css">
+  body{
+  font-size: 11pt;
+}
+  h1{
+  font-size: 18pt;
+}
+  h2{
+  font-size: 14pt;
+}
+</style>
+
 
 
 
@@ -1433,9 +1445,9 @@ ggplot(data=cluster_count)+
 
 ![](RB_capstone_files/figure-html/cluster_count-1.png)<!-- -->
 
-This code is used to publish the data to Biqguery for use in an interactive dashboard created using Carto. The Carto deliverable is the story map deliverable for MUSA 8020 - Capstone Project. The Carto dashboard and Bigquery pipeline also act as a final project for MUSA 5090 - Geospatial Cloud Computing and Visualization. The Carto visualization is available [here](https://clausa.app.carto.com/map/39f234f9-2648-42cf-a2c1-f0ba9b860aec).
-
 # Publish to Bigquery
+
+This code is used to publish the data to Biqguery for use in an interactive dashboard created using Carto. The Carto deliverable is the story map deliverable for MUSA 8020 - Capstone Project. The Carto dashboard and Bigquery pipeline also act as a final project for MUSA 5090 - Geospatial Cloud Computing and Visualization. The Carto visualization is available [here](https://clausa.app.carto.com/map/39f234f9-2648-42cf-a2c1-f0ba9b860aec).
 
 
 ```r
