@@ -18,6 +18,7 @@ SELECT
     ELSE NULL
   END AS cluster_letter,
   --CAST(clusters AS STRING) AS assigned_cluster,
+  STATE_NAME AS state_name,
   ROUND(flood_pct,2) AS flooding,
   ROUND(pct_minority,2) AS minority_pop,
   ROUND(pct_non_english,2) AS non_english_pop,

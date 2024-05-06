@@ -1,7 +1,0 @@
-"0","t <- basin_tracts_2 %>%"
-"0","  st_drop_geometry() %>%"
-"0","  dplyr::select(PM25,OZONE,DSLPM,AIR_CANCER,RESP,PTRAF) %>%"
-"0","  scale() %>%"
-"0","  as_data_frame()"
-"0",""
-"0","basin_tracts_2$air_index <- scale(rowSums(t) / 6)"

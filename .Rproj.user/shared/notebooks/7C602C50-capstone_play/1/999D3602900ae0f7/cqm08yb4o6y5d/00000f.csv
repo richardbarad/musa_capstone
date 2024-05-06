@@ -1,7 +1,0 @@
-"0",""
-"0","basin_tracts_2 <- left_join(basin_tracts,epa_data,by='GEOID') %>% #Join tracts to EPA data"
-"0","  left_join(.,all_places,by='GEOID') %>% #Join CDC data"
-"0","  filter(total_pop > 0) %>% #Remove tracts with no population"
-"0","  mutate(pct_non_english = ifelse(is.nan(pct_non_english),NA,pct_non_english), #Turn nan to NA where denominator was zero."
-"0","         pct_poverty = ifelse(is.nan(pct_poverty),NA,pct_poverty), #Turn nan to NA where denominator was zero."
-"0","         pct_old_homes = ifelse(is.nan(pct_old_homes),NA,pct_old_homes)) #Turn nan to NA where denominator was zero."

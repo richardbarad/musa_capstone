@@ -1,9 +1,0 @@
-"0","baseURL_EJI <- ""https://onemap.cdc.gov/OneMapServices/rest/services/EJI/Environmental_Justice_Index_2022/FeatureServer/64/query""
-
-OHquery_EJI <- urltools::param_set(baseURL_EJI,key=""where"", value=""StateAbbr='OH'"") %>%
-                  param_set(key='f', value = 'geojson') %>%
-                  param_set(key=""outFields"", value=""RPL_EJI"")
-"
-"2","Error in param_set(., key = ""outFields"", value = ""RPL_EJI"") : 
-  could not find function ""param_set""
-"
