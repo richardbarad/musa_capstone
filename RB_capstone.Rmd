@@ -1,5 +1,6 @@
 ---
 title: "Exploring Environmental Justice in the Delaware River Basin using K-means Cluster Analysis"
+author: "Richard Barad"
 output:
   html_document:
     keep_md: yes
@@ -35,21 +36,25 @@ options(tigris_use_cache = TRUE)
 
 options(scipen = 999)
 
+proj <- 26918
+
 ```
 
 # Introduction
 
-This analysis was completed as my capstone project for MUSA - 8020 Capstone Project/Advanced Topics In GIS. The project aims to explore how cluster analysis techniques, specifically k-means cluster analysis can be used to map and identify environmental justice areas, and group together areas that face similar environmental and socioeconomic vulnerabilities and risks.
+This analysis was completed by Richard Barad as a capstone project for MUSA - 8020 Capstone Project/Advanced Topics In GIS. The project aims to explore how cluster analysis techniques, specifically k-means cluster analysis can be used to map and identify environmental justice areas, and group together census tracts that face similar environmental and socioeconomic vulnerabilities and risks.
 
 # Existing Environmental Justice Mapping Initiatives
 
-Over the past 10 years, there has been an increased focus on environmental justice in the United States. The environmental justice movement emerged because poor and/or marginalized communities have tended to harmed by hazardous waste, resource extraction, and other negative land uses from which the marginalized communities do not benefit. In recent years, the federal and state government has acknowledged that health and environmental burdens have tended to have a larger impact on marginalized communities and are putting in place programs to help environmentally burdened, marginalized communities. For example, the EPA has set up an Office of Environmental Justice and External Civil Rights (OEJECR) to coordinate efforts to integrate environmental justice into all policies, programs, and activities^[Environmental Protection Agency, Learn About Environmental Justice, https://www.epa.gov/environmentaljustice/learn-about-environmental-justice]. Additionally, the Biden Administration launched the Justice40 initiative in 2022, this initiative sets a goal that 40% of federal funds for climate, clean energy, affordable and sustainable housing projects are directed towards marginalized communities that have been overburdened by pollution^[The White House, Justice40, A whole of Government initiative, https://www.whitehouse.gov/environmentaljustice/justice40]. 
+Over the past 10 years, there has been an increased focus on environmental justice in the United States. The environmental justice movement emerged because poor and/or marginalized communities have tended to harmed by hazardous waste, resource extraction, and other negative land uses from which the marginalized communities do not benefit. In recent years, the federal and state government has acknowledged that health and environmental burdens have tended to have a larger impact on marginalized communities and are trying to put in place programs to help environmentally burdened, marginalized communities. For example, the EPA has set up an Office of Environmental Justice and External Civil Rights (OEJECR) to coordinate efforts to integrate environmental justice into all policies, programs, and activities^[Environmental Protection Agency, Learn About Environmental Justice, https://www.epa.gov/environmentaljustice/learn-about-environmental-justice]. Additionally, the Biden Administration launched the Justice40 initiative in 2022, this initiative sets a goal that 40% of federal funds for climate, clean energy, affordable and sustainable housing projects are directed towards marginalized communities that have been overburdened by pollution^[The White House, Justice40, A whole of Government initiative, https://www.whitehouse.gov/environmentaljustice/justice40]. 
 
 At the state level, many states are also requesting that grant requests for state funding consider environmental justice. For example, the Pennsylvania Department of Environmental Protection (DEP) notes that many state grant project require communities to consider environmental justice as part of their grant proposal^[PA Department of Environmental Protection, Funding Opportunities, https://www.dep.pa.gov/PublicParticipation/OfficeofEnvironmentalJustice/Funding/Pages/default.aspx]. 
 
-The growing interest in environmental justice, and targeted funding for environmentally burdened communities has result in a growing number of environmental justice related mapping initiatives. Environmental Justice Mapping, sometimes also refereed to as burdened community mapping seeks to identify areas with a high environmental burden that also contain low income and/or vulnerable communities. Environmental Justice mapping aims to help decision makers identify areas eligible for funding through programs like Justice40. Existing Environmental Justice Mapping has primarily occurred at the state and federal level. A study by University of Indiana identified 17 state level environmental justice mapping tools^[David Konisky, Daniel Gonzalex, Kelly Leatherman. 2021. Mapping for Environmental Justice: An Analysis of State Level Tools, Environmental Resilience Institute, Indian University.]. These tools vary in complexity but typically use a mix of socio-economic and demographic data from the census including race, income, and education data. Some of the tools also incorporate environmental variables like air quality and proximity to legacy pollution sites. 
+The growing interest in environmental justice, and targeted funding for environmentally burdened communities has resulted in a growing number of environmental justice related mapping initiatives. Environmental Justice mapping, sometimes also refereed to as burdened community mapping seeks to identify areas with a high environmental burden that also contain low income and/or vulnerable communities. Environmental Justice mapping aims to help decision makers identify areas eligible for funding through programs like Justice40. Existing Environmental Justice mapping has primarily occurred at the state and federal level. A study by University of Indiana identified 17 state level environmental justice mapping tools^[David Konisky, Daniel Gonzalex, Kelly Leatherman. 2021. Mapping for Environmental Justice: An Analysis of State Level Tools, Environmental Resilience Institute, Indian University.]. These tools vary in complexity but typically use a mix of socio-economic and demographic data from the census including race, income, and education data. Some of the tools also incorporate environmental variables like air quality and proximity to legacy pollution sites. 
 
-Some state level tools just present raw data at the census tract level, while other go a step further and built environmental justice index. The first state to develop an environmental justice index was California - the California index was first released in 2013 and since been updated multiple four times^[California Office of Environmental Health Hazard Assessment. 2013 CaleEnviroScreen 1.0. https://oehha.ca.gov/calenviroscreen/report-general-info/calenviroscreen-10]. Many other states including Pennsylvania and Michigan have developed similar indexes based on the methodology used in California. In Pennsylvania, the EJ index is called PennEnviroScreen and is based on thirty different indicators which are shown in the table below. The variables are divided into four different components and separate indexes are calculated for each component. The components are then merged together into a single index. The variables on the pollution burden side tend to be environmental variables, while the population characteristic variables refer to public health, demographic, and socioeconomic characteristics of the population.
+Some state level tools just present raw data at the census tract level, while other go a step further and build environmental justice indexes. The first state to develop an environmental justice index was California - the California index was released in 2013 and has since been updated four times^[California Office of Environmental Health Hazard Assessment. 2013 CaleEnviroScreen 1.0. https://oehha.ca.gov/calenviroscreen/report-general-info/calenviroscreen-10]. Many other states including Pennsylvania and Michigan have developed similar indexes based on the methodology used in California. To provide an example from Pennsylvania, the EJ index is called PennEnviroScreen and is based on thirty different indicators which are shown in the table below. The variables are divided into four different components and separate indexes are calculated for each component. The components are then merged together into a single index. 
+
+The variables on the pollution burden side tend to be environmental variables, while the population characteristic variables refer to public health, demographic, and socioeconomic characteristics of the population.
 
 ```{r}
 
@@ -71,36 +76,36 @@ cbind(Environmental_Exposure_Component,Environmental_Effects_Component,Sensitive
 
 At the federal level, multiple agencies have also produced Environmental Justice mapping tools. The Agency of Toxic Substances and Disease Registry (ASTDR), which is overseen by the Center for Disease Control (CDC) has created an index called the Environmental Justice Index (EJI). The EJI uses a similar method to the Pennsylvania EJ Index discussed above, but relies only on federally available datasets including data from the U.S Census Bureau, The U.S Environmental Protection Agency, and the Center for Disease Control (CDC). The index includes 36 variables which are divided into three components. The three components are the Health Vulnerability Module, The Environmental Burden Module, and the Health Vulnerability Module. 
 
-Another example of a federal tool is the Climate and Economic Justice Screening Tool (CJEST). CJEST was developed by the Council on Environmental Quality (CEQ), under an executive order from the Biden Administration and is designed to help identify disadvantages communities that can benefit from Justice40 funding. Like the EJI, the CJEST is also based on data from multiple different federal datasets. However, unlike the other products discussed, CJEST does not use an index approach. Instead it considers environmentally burdened communities to include any communities where any indicator included in CJEST is at or above the 90th percentile - the census tract must also be at or above the 65th percentile for low income. The CJEST product has received some criticism for not explicitly including race in the tool^[Drew Costley. Exclusion of race in federal climtae justice screening tool could worsen disparities, analysis says. 2023 Associated Press. https://apnews.com/article/environment-climate-pollution-biden-justice40-air-633392b2f4f50bbaaff8880746783966]. It has also been criticized for oversimplifying complex issues, and for failing to adequately identify and flag areas with compounding burdens^[Bob Dean and Paul Esling. CEJST is a simple map, with big implications – and attention to cumulative burdens matters. 2023. Center for Neighborhood Technology. https://cnt.org/blog/cejst-is-a-simple-map-with-big-implications-and-attention-to-cumulative-burdens-matters]. 
+Another example of a federal tool is the Climate and Economic Justice Screening Tool (CJEST). CJEST was developed by the Council on Environmental Quality (CEQ), under an executive order from the Biden Administration and is designed to help identify disadvantaged communities that can benefit from Justice40 funding. Like the EJI, CJEST is also based on data from multiple different federal datasets. However, unlike the other products discussed, CJEST does not use an index approach. Instead it considers environmentally burdened communities to include any communities where any indicator included in CJEST is at or above the 90th percentile - the census tract must also be at or above the 65th percentile for low income. The CJEST product has received some criticism for not explicitly including race^[Drew Costley. The Exclusion of race in federal climtae justice screening tool could worsen disparities, analysis says. 2023 Associated Press. https://apnews.com/article/environment-climate-pollution-biden-justice40-air-633392b2f4f50bbaaff8880746783966]. It has also been criticized for oversimplifying complex issues, and for failing to adequately identify and flag areas with compounding burdens^[Bob Dean and Paul Esling. CEJST is a simple map, with big implications – and attention to cumulative burdens matters. 2023. Center for Neighborhood Technology. https://cnt.org/blog/cejst-is-a-simple-map-with-big-implications-and-attention-to-cumulative-burdens-matters]. 
 
 # Limitations of Existing Tools
 
 The current approaches for environmental justice and burdened community mapping have some limitations. Firstly, both the index approach and the threshold approach used in CJEST make it challenging for decision makers to understand what is leading to an area being classified as an environmental justice area. Understanding this requires exploring the raw data, which decision makers may not always have the time and/or skills to do this work. Additionally, all the tools discussed here have been developed at the state or national level and do not provide information that can be used to support regional planning across state boundaries. 
 
-# Research Questions
+# Research Goals
 
-My research focuses on two main questions. 
+My research focuses on two main goals:
 
-1) First I aim to explore how cluster analysis techniques, specifically k-means cluster analysis can be used for environmental justice mapping. Cluster analysis identifys groups of data that share similar characteristics. In my use case, I aim to identify census tracts that share similar health, environmental, and socioeconomic vulnerabilities. The results of the cluster analysis should also be able to help identify clusters that experience similar compounding hazards and vulnerabilities.
+1) Explore how cluster analysis techniques, specifically k-means cluster analysis can be used for environmental justice mapping. Cluster analysis identifys groups of data that share similar characteristics. In my use case, I aim to identify census tracts that share similar health, environmental, and socioeconomic vulnerabilities. The results of the cluster analysis should also be able to help identify clusters that experience similar compounding hazards and vulnerabilities.
 
-2) I am aim to carryout my analysis at a regional scale, and will use a study areas that transcends states boundaries. The results of the cluster analysis, should allow decision makers to make comparisons across a larger region and support regional decision making across sate boundaries.
+2) Carryout analysis at a regional scale, using a study areas that transcends states boundaries. The results of the cluster analysis, should allow decision makers to make comparisons across a larger region and support regional decision making across sate boundaries.
 
 
 # Study Area
 
-My study area is the Delaware River Basin, specifically the sections of the Basin located in Delaware, New Jersey, and Pennsylvania. The study area is shown in orange in the figure below.  I choose to examine a natural boundary like a watershed because environmental pollutants do not respect political boundaries. Additionally, environmental planners are often interested in being able to analyze and make comparisons across a natural boundary such as a watershed. A cross-state analysis will also allow my results to be more useful for regional level planning and decision making. 
+The study area is the Delaware River Basin, specifically the sections of the Basin located in Delaware, New Jersey, and Pennsylvania. The study area is shown in orange in the figure below. A natural boundary like a watershed is chosen as the study area because environmental pollutants do not respect political boundaries. Additionally, environmental planners are often interested in being able to analyze and make comparisons across a natural boundary such as a watershed. A cross-state analysis will also allow the results to be more useful for regional level planning and decision making. 
 
 ```{r study_area, results='hide'}
 
 states1 <- states() %>%
-  filter(STUSPS %in% c('PA','NJ','DE','NY','MD')) %>% st_transform(26918)
+  filter(STUSPS %in% c('PA','NJ','DE','NY','MD')) %>% st_transform(proj)
 
 states2 <- states1 %>% filter(STUSPS %in% c('PA','NJ','DE'))
 
 de_river_basin <- st_read('https://services8.arcgis.com/5Wj4rmM3lycu9Zo6/arcgis/rest/services/DRB_SAs/FeatureServer/0/query?f=geojson&where=1=1') %>%
-  st_transform(26918)
+  st_transform(proj)
 
-
+#Intersect study DE, PA, and DE with Delaware River Basin to create study Area
 study_area <- st_intersection(de_river_basin,st_union(states2))
 
 ```
@@ -116,7 +121,7 @@ ggplot()+
 
 # Datasets
 
-The table below shows the datasets which are included in my cluster analysis. In total 10 different variables will be included in the cluster analysis. I choose to rely on federal datasets in order to allow my research to be replicable in another geography.
+The table below shows the datasets which are included in the cluster analysis. In total 10 different variables are included. All variabels rely on federal datasets in order to allow for replicability in another geography within the United States.
 
 ``` {r datasets}
 
@@ -136,19 +141,19 @@ cbind(Variable,Source,Notes) %>%
 
 # Methodology
 
-The flow chart below shows my methods for carrying out this analysis. The schematic is intended to be a high level overview of the methods and data processing steps used. Additional annotations will be provided throughout the code to provide additional details on each step of the process. All data analysis occurred at the census tract level.
+The flow chart below shows the methods for carrying out this analysis. The schematic is intended to be a high level overview of the methods and data processing steps used. Additional annotations will be provided throughout the code to provide additional details on each step of the process. All data analysis occurred at the census tract level.
 
 ![Capstone Metholodology Flow Chart](capstone_flow_chart.png)
 
 # Data Wrangling
 
-The first step in my process involved wrangling data from a variety of different federal databases. The federal databases used include data from the American Community Survey, CDC, EPA, FEMA, and USDA. I also engineer new variables through the creation of indexes prior to carrying out cluster analysis.
+The first step involved wrangling data from a variety of different federal databases. The federal databases used include data from the American Community Survey, CDC, EPA, FEMA, and USDA. New variables are also engineered through the creation of indexes.
 
 ## Census Data
 
 Data from the U.S Census Bureau is downloaded from the American Community Survey (ACS) - specifically the five year ACS data for 2022 which is the most recent ACS data available. Data is downloaded using the tidycensus R package.
 
-To download data, I first created a function that downloads data for the variables of interest for a specified state and year. I use this function to download five year ACS data at the tract level for Pennsylvania, New Jersey, and Delaware. Percent data is not directly available from the ACS and it is thus necessary to calculate the percent of the population that is not white, the percent of households with limited English proficiency, the percent of the population without a university degree, and the percent of households below the poverty line. 
+To download data, a function is created that downloads data for the variables of interest for a specified state and year. This function is used to download five year ACS data at the tract level for Pennsylvania, New Jersey, and Delaware. Percent data is not directly available from the ACS and it is thus necessary to calculate the percent of the population that is not white, the percent of households with limited English proficiency, the percent of the population without a university degree, and the percent of households below the poverty line. 
 
 The formulas below specify the calculations for each variable originating from the ACS. The formulas specify the ACS census variables names used in the calculations. In all cases, the denominator used comes from the same ACS table as the numerator which is a practice the ACS recommends when calculating percents. It also important to note that the ACS data are not exact counts, but rather are estimates which represent the mid-point of a range.
 
@@ -160,7 +165,7 @@ The percent of households with limited English proficiency is calculated by summ
 
 $$pct\_nonenglish = \frac{(C16002\_004E + C16002\_007E + C16002\_010E + C16002\_013E)}{C16002\_001E} * 100$$
 
-The percent of the population over 25 without a university degree is calculated by summing together the population over 25 without a high school degree and the population over 25 with just a high school degree and no university degree. This sum is then divided by the total population over 25 and multipled by 100 to determine the percent of residents who do not have a uniersity degree.
+The percent of the population over 25 without a university degree is calculated by summing together the population over 25 without a high school degree and the population over 25 with just a high school degree and no university degree. This sum is then divided by the total population over 25 and multiplied by 100 to determine the percent of residents who do not have a university degree.
 
 $$pct\_nouniversity = \frac{(B06009\_002E + B06009\_003E)}{B06009\_001E} * 100$$
 
@@ -197,7 +202,7 @@ process_acs <- function(state,level,vars,year){
   }
 
 census_tract <- rbind(process_acs('DE','tract',vars,2022),process_acs('PA','tract',vars,2022),process_acs('NJ','tract',vars,2022)) %>%
-  st_transform(26918) %>%
+  st_transform(proj) %>%
   mutate (pct_minority = 100 - (B02001_002E / B02001_001E * 100),
             pct_non_english = (C16002_004E + C16002_007E + C16002_010E + C16002_013E)/C16002_001E * 100,
             pct_no_university = (B06009_002E + B06009_003E) / B06009_001E * 100,
@@ -205,7 +210,7 @@ census_tract <- rbind(process_acs('DE','tract',vars,2022),process_acs('PA','trac
             total_pop = B02001_001E)
 ```
 
-I filter the census data to only include census tracts located in my study area. My analysis includes all census tracts in Delaware, New Jersey, and Pennsylvania that have a centroid located within my study area.
+The census tract data is spatially filtered to only include census tracts located in the study area. The analysis includes all census tracts in Delaware, New Jersey, and Pennsylvania that have a centroid located within the study area.
 
 ```{r identify_basin_tracts}
 
@@ -221,7 +226,7 @@ basin_tracts <- st_centroid(census_tract) %>%
 
 ## EPA EJ Screen Data
 
-Data on air quality, proximity to legacy pollution, and toxic waste water emissions is downloaded from the EPA Environmental Justice Screen dataset^[Environmental Protection Agency. 2023 version. Environmental Justice Screen (EJ Screen). www.epa.gov/ejscreen]. The EPA EJ Screen dataset provides data for 13 environmental indicators and data is made available at the census tract level. I download the data for Pennsylvania, Delaware, and New Jersey using an API request to a feature service hosted on ArcGIS Online. In my API request, I include parameters such that the API response only returns data for census tracts in Pennsylvania, Delaware, New Jersey and the response only includes the specific variables I plan to use in my analysis. The API response is read into a spatial dataframe using the sf package.
+Data on air quality, proximity to legacy pollution, and toxic waste water emissions is downloaded from the EPA Environmental Justice Screen dataset^[Environmental Protection Agency. 2023 version. Environmental Justice Screen (EJ Screen). www.epa.gov/ejscreen]. The EPA EJ Screen dataset provides data for 13 environmental indicators and data is made available at the census tract level. The data is downloaded for Pennsylvania, Delaware, and New Jersey using an API request to a feature service hosted on ArcGIS Online. The API request includes parameters such that the API response only returns data for census tracts in Pennsylvania, Delaware, New Jersey and the response only includes the specific variables used in the analysis. The API response is read into a spatial dataframe using the sf package.
 
 ```{r ej_screen, results='hide'}
 
@@ -240,7 +245,7 @@ epa_data <- sf::st_read(final_url)
   
 ```
 
-I perform several data manipulation steps to create a single index from related environmental variables. 
+Several data manipulation steps are carried out to create a single index from related environmental variables. 
 
 **Legacy Pollution**
 
@@ -256,11 +261,11 @@ EJ Screen calculates all three variables as the count of the number of locations
 
 The EJ Screen data on toxic wastewater discharges is calculated using the EPA's Risk-Screening Environmental Indicators (RSEI) Dataset. This dataset includes data on toxic emissions from industrial facilitates. The EPA EJ Screen value represents the sum of RSEI modeled toxic concentrations at streams located within 500 meters of each census tract centroid, and each facility is weighted by the distance in kilometers (km) from the centroid. The raw data for the Delaware Basin has a very strong left skew as shown in the chart below with the majority of census tract having values lower than 50. However, there are several tracts that are very significant outliers with the highest value being 3928. 
 
-In order to work around this challenge, I decide to convert the data to percentile which is the approach EJ Screen uses to present this data. The percentiles range from 0 to 100% with a median at the 50th percentile. When calculating the percentiles I only consider census tracts located in my study area.
+In order to work around this challenge, the data was converted to a percentile which is the approach EJ Screen uses to present this data. The percentiles range from 0 to 100% with a median at the 50th percentile. When calculating the percentiles only census tracts located in the study area are considered.
 
 **Air Quality**
 
-I also create an air quality index, based on six air quality variables included in EJ Screen. The methodology for Air quality index will be discussed in more detail in the next section. 
+The analysis also includes an air quality index, calculated based on six air quality variables included in EJ Screen. The methodology for Air quality index will be discussed in more detail in the next section. 
 
 ```{r}
 
@@ -279,11 +284,12 @@ epa_data <- epa_data %>%
 
 ## CDC Public Health Data
 
-The analysis also includes a public health index, calculated based on Data from the CDC PLACES dataset and one variable from the American Community Survey (ACS). The PLACES dataset contains model-based census tract public health estimates, the data in PLACES is modeled using data from CDC's Behavioral Risk Factor Surveillance System (BRFSS) and the dependent variable, and variables from the ACS as the independent variables.^[PLACES. Centers for Disease Control and Prevention. 2022. https://www.cdc.gov/places]  
+The analysis also includes a public health index, calculated based on Data from the CDC PLACES dataset and one variable from the American Community Survey (ACS). The PLACES dataset contains model-based census tract public health estimates, the data in PLACES is modeled using data from CDC's Behavioral Risk Factor Surveillance System (BRFSS) and the dependent variable, using data from the ACS as the independent variables.^[PLACES. Centers for Disease Control and Prevention. 2022. https://www.cdc.gov/places]. The model produces percent prevalence data for various cronic conditions at the census tract level. Testing by the CDC has shown that the PLACES dataset estimates are accurate.
 
-The specific variables from PLACES included in my index are: Percent of Population with Arthritis, Percent of Population with Cancer, Percent of Population with Asthma, Percent of Population with High Cholesterol, Percent of Population with Depression, Percent of Population with history of stroke, Percent of Population with Obesity, Percent of Population with Diabetes, Percent of Population with Chronic Heart Disease, and data from ACS on the Percent of Homes in the census tract that were built before 1960. The age of homes is include in order to incorporate risk of exposure to lead. 
 
-CDC PLACES data for Pennsylvania, Delaware, and New Jersey are downloaded using the CDC Socrata API using the RSocrata package. Data on the percent of homes build before 1960 is downloaded from the census API using the tidycensus package. After merging the CDC and ACS data into a single dataframe, I identify tracts which overlap the study area and create a dataframe that only includes the census tracts in the study area. 
+The variables from PLACES included in the public health index are: Percent of Population with Arthritis, Percent of Population with Cancer, Percent of Population with Asthma, Percent of Population with High Cholesterol, Percent of Population with Depression, Percent of Population with history of stroke, Percent of Population with Obesity, Percent of Population with Diabetes, Percent of Population with Chronic Heart Disease, and data from ACS on the Percent of Homes in the census tract that were built before 1960. The age of homes is include in order to incorporate risk of exposure to lead. 
+
+CDC PLACES data for Pennsylvania, Delaware, and New Jersey are downloaded using the CDC Socrata API using the RSocrata package. Data on the percent of homes build before 1960 is downloaded from the census API using the tidycensus package. After merging the CDC and ACS data into a single dataframe, the tracts which overlap the study area are identified, and a spatial dataframe that only includes the census tracts in the study area is created.  
 
 ```{r cdc_places}
 
@@ -294,7 +300,7 @@ places_nj <- read.socrata('https://data.cdc.gov/resource/cwsq-ngmh.csv?stateabbr
 home_vars = c('B25034_001','B25034_011','B25034_010','B25034_009')
 
 home_data <- rbind(process_acs('DE','tract',home_vars,2019),process_acs('PA','tract',home_vars,2019),process_acs('NJ','tract',home_vars,2019)) %>%
-  st_transform(26918) %>%
+  st_transform(proj) %>%
   mutate (pct_old_homes = (B25034_011E + B25034_010E + B25034_009E) / B25034_001E * 100) %>%
   select(pct_old_homes, GEOID) %>%
   st_drop_geometry()
@@ -307,7 +313,7 @@ all_places <- rbind(places_pa,places_de,places_nj) %>%
   dplyr::select(GEOID,ARTHRITIS,CANCER,CASTHMA,HIGHCHOL,DEPRESSION,STROKE,OBESITY,DIABETES,CHD) %>%
   left_join(.,home_data,by='GEOID')
 
-tracts2010 <- rbind(tracts(state='PA',year=2019),tracts(state='DE',year=2019),tracts(state='NJ',year=2019)) %>% st_transform(26918)
+tracts2010 <- rbind(tracts(state='PA',year=2019),tracts(state='DE',year=2019),tracts(state='NJ',year=2019)) %>% st_transform(proj)
 
 cpc_basin <- tracts2010 %>%
   st_centroid() %>%
@@ -322,13 +328,13 @@ cpc_basin <- tracts2010 %>%
   
 ```
 
-# Exploratory Data Analysis and Feature Enginering
+# Data Analysis and Feature Enginering
 
-I carryout exploratory analysis to better understand the spatial patterns and correlations between the variables included in the analysis. Additionally, the discussed indexes are also created. 
+Exploratory analysis is carried out to better understand the spatial patterns and correlations between the variables included in the analysis. Additionally, the discussed indexes are also created. 
 
 ## CDC Public Health Data
 
-The correlation matrix below shows the pearson correlation matrix between the public health variables from the CDC and old homes variable from the ACS. As shown, there is a high degree of correlation between multiple variables. For example, the pearson correlation between Arthritis and Coronary Health Disease (CHD) is 0.87. It is generally not advisable to include highly correlated variables in a cluster analysis. Additionally, including ten public health variables would result in a cluster analysis model that places too heavy of an emphasis on public health. As a solution to these challenges, I develop a public health index based on the ten public health related variables.   
+The correlation matrix below shows the pearson correlation matrix between the public health variables from the CDC and old homes variable from the ACS. As shown, there is a high degree of correlation between multiple variables. For example, the pearson correlation between Arthritis and Coronary Health Disease (CHD) is 0.87. It is generally not advisable to include highly correlated variables in a cluster analysis. Additionally, including ten public health variables would result in a cluster analysis model that places too heavy of an emphasis on public health. As a solution to these challenges, a public health index based on the ten public health related variables is developed.   
 
 ``` {r correlation_cdc}
 
@@ -345,7 +351,7 @@ ggsave('outputs/cdc_plot.png')
 
 Two different approaches for creating an index are considered. 
 
-The first, is a simple index calculated as a mean of all ten variables. Prior to calculating the mean I use min-max scaling technique to scale all ten variables between 0 and 1 so that all variables have the same range. The mean scaled values for each census tract is then calculated and the resulting index is again scaled using min max scaling so that the final values range between zero and one.  
+The first, is a simple index calculated as a mean of all ten variables. Prior to calculating the mean min-max scaling is used to scale all ten variables such that the values range between 0 and 1, and all variables have the same range. The mean scaled values for each census tract across all ten variables is then calculated. The resulting index is again scaled using min max scaling so that the final values range between zero and one.  
 
 ``` {r cdc_index}
 cpc_no_geom <- cpc_basin %>%
@@ -365,7 +371,7 @@ health_hazard_index <- (health_index - min) / (max - min)
 cpc_basin <- cbind(cpc_basin,health_hazard_index)
 ```
 
-The second approaches involves using principle component analysis (PCA). Using principle component analysis (PCA) to create an index is a commonly used statistical analysis technique. An example is Susan Cutter's Social Vulnerability Index where PCA was used to create vulnerability index from 42 variables^[Cutter, S.L., Boruff, B.J. and Shirley, W.L. (2003), Social Vulnerability to Environmental Hazards†. Social Science Quarterly, 84: 242-261. https://doi.org/10.1111/1540-6237.8402002]. Susan Cutter used PCA to reduce the number of variables from 42 to 11 variables. The resulting 11 component variables were then summed together to create a single index.
+The second approaches involves using principle component analysis (PCA). Using principle component analysis (PCA) to create an index is a commonly used statistical technique. An example is Susan Cutter's Social Vulnerability Index where PCA was used to create vulnerability index from 42 variables^[Cutter, S.L., Boruff, B.J. and Shirley, W.L. (2003), Social Vulnerability to Environmental Hazards†. Social Science Quarterly, 84: 242-261. https://doi.org/10.1111/1540-6237.8402002]. Susan Cutter used PCA to reduce the number of variables from 42 to 11 variables. The resulting 11 component variables were then summed together to create a single index.
 
 This analysis replicates this approach, and runs PCA on the ten public health related variables. The table below shows the proportion of variance explained by each component and the cumulative proportion explained by retaining the cumulative number of components. For example, if PC1 and PC2 were retained 75.963% of the variation in the data would be explained. Five components are retained as this will explain 96.221% of the variance in the data.  
 
@@ -385,7 +391,7 @@ summary(pca)$importance %>%
 
 ```
 
-The final PCA index is calculated by summing together the five component values. The final index is min max scalled to scale the index values between 0 and 1 to allow for easier comparisons between the PCA index and the mean index. 
+The final PCA index is calculated by summing together the five component values. The final index is min max scaled to scale the index values between 0 and 1 to allow for easier comparisons between the PCA index and the mean index. 
 
 ``` {r cdc_index2_countinued}
 
@@ -451,7 +457,7 @@ ggsave('outputs/health.png')
 
 Next, the Public Health Index, EPA EJ Screen Data, and variables from the ACS into a single spatial dataframe. This is done by joining the datasets based on the GEOID column. 
 
-One challenge is that the EPA and Census datasets use the 2020 census tract boundaries, while the CDC index is calculated using 2010 census tract boundaries. Due to changes in boundaries it is not possible to join the CDC index directly to the ACS and EJ Screen data. To address this challenge, I use a cross-walk table provided the census bureau that includes information on the overlapping area between 2010 census tract boundaries and the 2020 census tract boundaries. I join the index data to the cross-walk table and then calculated a weighted average index value for each of the 2020 census tracts, using the percent overlap between the 2020 and 2010 census tract as the weight.  
+One challenge is that the EPA and Census datasets use the 2020 census tract boundaries, while the CDC index is calculated using 2010 census tract boundaries. Due to changes in boundaries it is not possible to join the CDC index directly to the ACS and EJ Screen data. To address this challenge, a cross-walk table provided the census bureau that includes information on the overlapping area between 2010 census tract boundaries and the 2020 census tract boundaries. I join the index data to the cross-walk table and then calculated a weighted average index value for each of the 2020 census tracts, using the percent overlap between the 2020 and 2010 census tract as the weight.  
 
 ```{r join_data}
 
@@ -478,17 +484,19 @@ basin_tracts_2 <- boundary_changes %>%
   rename(GEOID = GEOID_TRACT_20) %>%
   left_join(basin_tracts_2,.,by='GEOID')
 
+# Put basin tracts into 4269 so that it was necessary to reproject Flood Plain data
+
 basin_tracts_2_4269 <- basin_tracts_2 %>% st_transform(4269)
 ```
 
 ## Air Quality Data Analysis
 
-As discussed previously, I also develop an air quality index based on multiple air quality related variables from the EJ Screen dataset. The correlation matrix below shows the pearson correlation value for the relationship between each of the air quality variables. The five air quality related variables are:
+As discussed previously, an air quality index based on multiple air quality related variables from the EJ Screen dataset is also created. The correlation matrix below shows the pearson correlation value for the relationship between each of the air quality variables. The five air quality related variables are:
 
 * Annual average PM2.5 levels in air (PM25) measured in micrograms per cubic meter.
-* Average of the annual top ten daily maximum 8-hour ozone concentrations in air (OZONE) in parts per billion
+* Average of the annual top ten daily maximum 8-hour ozone concentrations in air (OZONE) in parts per billion.
 * Average annual Diesel particulate matter level in air (DSLPM) in micrograms per cubic meter. 
-* Ratio of exposure to air toxics compared to health-based reference concentration (RESP)
+* Ratio of exposure to air toxics compared to health-based reference concentration (RESP).
 * Traffic Proximity and Volume (PTRAF), calculated as count of vehicles (i.e: average annual daily traffic) at major roads within 500 meters, roads are weighted by distance in meters.
 
 As shown, there is a high correlation between Diesel Particulate Matter in the Atmosphere (DSPLM) and Ozone in the air. There is also a high correlation between DSPLM variables and exposure to air toxics compared to health-based references (RESP). Including variables with a high pearson correlation in a cluster analysis would not be appropriate.
@@ -536,7 +544,7 @@ ggsave('outputs/air.png',g)
 
 ```
 
-I develop an air quality index to avoid including multiple highly correlated variables in the cluster analysis. The air quality index is calculated by min max scalling all variables, so that all variables range from 0-1 and then calculating the mean of all variables. This results in a final index that ranges from 0.00005 to 0.67. 
+An air quality index is created to avoid including multiple highly correlated variables in the cluster analysis. The air quality index is calculated by min max scaling all variables, so that all variables range from 0-1 and then calculating the mean of all variables. This results in a final index that ranges from 0.00005 to 0.67. 
 
 ``` {r pollution_index}
 
@@ -551,7 +559,7 @@ air_index <- predict(process, basin_air_no_geom) %>% rowMeans()
 basin_tracts_2 <- cbind(basin_tracts_2,air_index)
 ```
 
-The map shows the resulting air quality index for the study area. Areas with the highest index value are located in the Philadelphia metro area and near Allentown, Pennsylvania.  
+The map below shows the resulting air quality index for the study area. Areas with the highest index value are located in the Philadelphia metro area and near Allentown, Pennsylvania.  
 
 ```{r}
 
@@ -563,9 +571,9 @@ ggsave('outputs/air_index.png',width=3.1,height=5)
 
 ## Census Analysis
 
-The maps below show census tract level for the four demographic and socio-economic variables from the American Community Survey included in the analysis. As shown, the percent of the population that is a minority is highest in census tracts North and West Philadelphia. Other areas with a large minority population include parts of Monroe county and areas near Wilmington and Dover in Delaware. The census tracts where a large percent of the population has a language barrier are spatially clustered, notable areas with clusters include the Philadelphia metro area, areas of Southern New Jersey, and areas near Allentown, Pennsylvania.
+The maps below show census tract level for the four demographic and socio-economic variables from the American Community Survey thare are included in the analysis. As shown, the percent of the population that is a minority is highest in census tracts in North and West Philadelphia. Other areas with a large minority population include parts of Monroe county and areas near Wilmington and Dover in Delaware. The census tracts where a large percent of the population has a language barrier are spatially clustered, notable areas with clusters include the Philadelphia metro area, areas of Southern New Jersey, and areas near Allentown, Pennsylvania.
 
-The percent of the population living bellow the poverty line tends to be highest in census tracts located in urban areas, such as Camden, Philadelphia and Wilmington. Exceptions to this trend include wealthier areas of Philadelphia like Northwest and Center City Philadelphia where the poverty rate is low. Suburban areas tend to have the lowest percent of the population below the poverty line, while rural areas such as Northern Pennsylvania and Southern New Jersey tend to have a poverty rate that falls somewhere in between the urban and sub-urban areas.  
+The percent of the population living bellow the poverty line tends to be highest in census tracts located in urban areas, such as Camden, Philadelphia, and Wilmington. Exceptions to this trend include wealthier areas of Philadelphia like Northwest and Center City Philadelphia where the poverty rate is low. Suburban areas tend to have the lowest percent of the population below the poverty line, while rural areas such as Northern Pennsylvania and Southern New Jersey tend to have a poverty rate that falls somewhere in between the urban and sub-urban areas.  
 
 ```{r demographic_map, fig.width=10,fig.height=6}
 
@@ -600,13 +608,13 @@ ggsave('outputs/socio_demographics.png',g)
 
 # Hazard Data
 
-Next, data on Natural Disaster risk is incorporated. The analysis incorporates flood risk and fire risk as these are two of the main hazards that can impact areas of the Delaware River Basin. In the future additional hazards such as Winter Weather Risk and/or Exposure to Extreme Temperatures. 
+Next, data on Natural Disaster risk is incorporated. The analysis incorporates flood risk and fire risk as these are two of the main hazards that can impact areas of the Delaware River Basin. In the future additional hazards such as Winter Weather Risk and/or Exposure to Extreme Temperatures could be incoporated. 
 
 ## Flood Risk
 
-Flood Risk is a major issue in the Delaware River as the basin includes multiple areas that are located near water bodies. The water bodies that overlap the study area include the Delaware Bay and River, and smaller rivers such as the Brandywine, Schuylkill, and Lehigh rivers. This analysis uses data on the Flood Hazard area published by the Federal Emergency Management Agency (FEMA). An important limitation to note is that FEMA flood mapping only considers river and costal flooding, the data does not capture flooding from urban drainage systems or pluvial flooding. Additionally, it is also important to note that FEMA flood mapping does not capture the impacts of sea level rise.
+Flood Risk is a major issue in the Delaware River as the basin includes multiple areas that are located near water bodies. The water bodies that overlap the study area include the Delaware Bay and River, and smaller rivers such as the Brandywine, Schuylkill, and Lehigh rivers. This analysis uses data on the Flood Hazard area published by the Federal Emergency Management Agency (FEMA). An important limitation to note is that FEMA flood mapping only considers river and costal flooding, the data does not capture flooding from urban drainage systems or pluvial flooding. Additionally, it is also important to note that FEMA flood mapping does not model the impacts of sea level rise and only considers current flood risk.
 
-This analysis calculates the percentage of each census tract that is located within the Delaware River Basin. Data on the Flood Hazard Area in Pennsylvania, New Jersey, and Delaware was downloaded from the FEMA website and edited to only include polygons for areas located within the flood plain. This flood plain was then intersected with the study area in order to select just the parts of the floodplain that are located within the study area. 
+This analysis calculates the percentage of each census tract that is located within the Delaware River Basin. Data on the Flood Hazard Area in Pennsylvania, New Jersey, and Delaware was downloaded from the FEMA website^[Federal Emergency Management Agency (FEMA). FEMA Flood Map Service Center. https://msc.fema.gov/portal/advanceSearch]. The data was edited to delete polygons for areas that are located within the flood plain. This floodplain data is then spatially filtered to only include areas of the floodplain that overlap the study area. 
 
 ```{r flood_plain, cache=TRUE, eval=FALSE}
 
@@ -620,18 +628,18 @@ DE_flood <- st_read('Data/DE_Flood_Hazard_Zone.shp')  %>%
   .[st_intersects(.,basin_tracts_2_4269) %>% lengths > 0, ]
 ```
 
-Next, the portion of the census tracts that permanently contain water was erased from the census tract. This was done to ensure that the calculation for the percent of the census tract located within the flood plain does not include area that is permanent water. 
+Next, the portion of the census tracts that permanently contain water is erased from the census tract. This was done to ensure that the calculation for the percent of the census tract located within the flood plain does not include area that is permanent water. 
 
-The floodplain data was also transformed into the appropriate projection and dissolved into single part polygons to help expedite the spatial intersection process. Finally, the census tracts with the water erased and the floodplain are intersected together and the area of the census tract located within in the floodplain is calculated. The percentage is calculated by dividing the area overlapping the floodplain by the total area of the census tract and the resulting percentage is appended to the dataframe containing the census tracts in the study area. 
+The floodplain data is also transformed into the appropriate projection and dissolved into single part polygons to help expedite the spatial intersection process. Finally, the census tracts with water erased and the floodplain are intersected together and the area of the census tract located within in the floodplain is calculated. The percentage is calculated by dividing the area overlapping the floodplain by the total area of the census tract. The resulting percentage is appended to the dataframe containing the other analysis variables. 
 
-The code chunk below, and the previous code chunk will take a longtime to run as performing spatial intersections in R is time consuming and memory intensive. When replicating this analysis it it is recommended these two code chunks be run once and the results outputted to a .csv for future use. 
+The code chunk below, and the previous code chunk will take a longtime to run as performing spatial intersections in R is time consuming and memory intensive. When replicating this analysis it is recommended these two code chunks be run once and the results outputted to a .csv for future use. 
 
 ```{r flood_plain2, cache=TRUE, eval=FALSE}
 
 basin_tracts_3 <- basin_tracts_2 %>% erase_water()
 
 flood_study_area <- rbind(PA_flood,DE_flood,NJ_flood) %>% 
-  st_transform(26918) %>%
+  st_transform(proj) %>%
   st_union(.) %>%
   st_cast(.,"POLYGON") %>% st_as_sf() %>% 
   rename(geometry = x)
@@ -694,13 +702,13 @@ ggsave('outputs/flood.png')
 
 ## Fire Risk
 
-Wildfires are another hazard which can impact the Delaware River Basin. While wildfire risk is low relative in the Delaware River Basin compared to Western and Central areas of the United States, they are a hazard which impact localized areas of the basin. Areas of the Delaware River Basin with the highest wildfire risk are located in New Jersey pine barrens and along the Delaware River Bay coastline. 
+Wildfires are another hazard which can impact the Delaware River Basin. While wildfire risk is low in the Delaware River Basin compared to Western and Central areas of the United States, they are a hazard which impact localized areas of the basin. Areas of the Delaware River Basin with the highest wildfire risk are located in New Jersey pine barrens and along the Delaware River Bay coastline. 
 
-The data on fire risk used in the analysis is obtained from the United States Department of Agriculture (USDA) Forest Service, which makes available a national 30 x 30 meter on the probability of a fire occurring in any year^[Scott, Joe H.; Gilbertson-Day, Julie W.; Moran, Christopher; Dillon, Gregory K.; Short, Karen C.; Vogler, Kevin C. 2020. Wildfire Risk to Communities: Spatial datasets of landscape-wide wildfire risk components for the United States. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2020-0016]. The product used is called 'WildFire Likelihood" and estimates the percent likelihood of a fire occurring in any year.
+The data on fire risk used in the analysis is obtained from the United States Department of Agriculture (USDA) Forest Service, which makes available a national 30 x 30 meter on the probability of a fire occurring in any year^[Scott, Joe H.; Gilbertson-Day, Julie W.; Moran, Christopher; Dillon, Gregory K.; Short, Karen C.; Vogler, Kevin C. 2020. Wildfire Risk to Communities: Spatial datasets of landscape-wide wildfire risk components for the United States. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2020-0016]. The product used is called 'WildFire Likelihood".
 
-State level raster tif files for Delaware, Pennsylvania, and New Jersey were downloaded from the [wildfire.org](wildfire.org), and then mosaiced together and reprojected using the R Terra package. Zonal statistic extraction tools were then used to calculated the mean wildfire likelihood for each census tract and the mean value is appended to the dataframe containing the census tracts in the study area. 
+State level raster tif files for Delaware, Pennsylvania, and New Jersey were downloaded from the [wildfirerisk.org](https://wildfirerisk.org/), and mosaiced together and reprojected using the R Terra package. Zonal statistic extraction tools were then used to calculated the mean wildfire likelihood for each census tract and the mean value is appended to the dataframe containing the other variables used in the cluster analysis.
 
-The code below also takes a bit of time to run. When replicating this analysis it is recommended the code below be run once and the zonal statistics results be saved to a csv file for future use. 
+The code below may take a long time to run. When replicating this analysis it is recommended the code below be run once and the zonal statistics results saved to a csv file for future use. 
 
 ```{r fire_risk, eval=FALSE}
 
@@ -712,7 +720,9 @@ raster_nj <- rast("Data/Fire/BP_NJ.tif")
 # Merge raster data into a single raster layer
 merged_raster <- terra::mosaic(raster_pa, raster_de, raster_nj)
 
-merged_raster <- project(merged_raster,"epsg:26918")
+rast_proj <- paste("epsg:",as.character(proj))
+
+merged_raster <- project(merged_raster,rast_proj)
 
 zone_values <- terra::extract(merged_raster, basin_tracts_4, method="simple", fun = mean, na.rm = TRUE)
 
@@ -729,7 +739,7 @@ basin_tracts_4 <- basin_tracts_4 %>%
   mutate(fire = zone_values$BP_PA * 100)
 ```
 
-The map below shows the resulting fire risk for census tracts in the Delaware River Basin. The majority of census tracts in the basin have a very low wildfire risk. The census tracts with the highest wild fire risk are spatially clustered along the Delaware river basin coastline and in Central areas of New Jersey. Additionally, there is also a localized area of Northeastern Pennsylvania that has a higher wildfire risk.  
+The map below shows the resulting fire risk for census tracts in the Delaware River Basin. The majority of census tracts in the basin have a very low wildfire risk. The census tracts with the highest wild fire risk are spatially clustered along the Delaware river basin coastline and in Central areas of New Jersey. Additionally, there is also a localized area of Northeastern Pennsylvania that has a higher wildfire risk relative to other parts of the study area.  
 
 ```{r fire_map}
 
@@ -751,14 +761,13 @@ ggsave('outputs/wildfire.png')
 
 # Clustering
 
-Having consolidated all variables of interest into a single data frame that includes all the census tracts in the basin, the next stage is to proceed with carrying out cluster analysis. This analysis uses k-means cluster analysis algorithm. The K-means algorithm is often used for large data sets with numeric variables. The method uses an iterative process that creates a division of objects into non-overlapping subsets (clusters) such that each object is in exactly one cluster. Before the six-step K-means process is initiated, the total number of clusters (K) must be specified. K-means cluster analysis algorithm does not consider spatial location as part of the analysis. However, the resulting cluster results can be joined to the census tract boundaries in order to create maps of the results.  
+Having consolidated all variables of interest into a single data frame that includes all the census tracts in the basin, the next stage is running a cluster analysis. This analysis uses k-means cluster analysis algorithm. The K-means algorithm is often used for large data sets with numeric variables. The method uses an iterative process that creates a division of objects into non-overlapping subsets (clusters) such that each object is in exactly one cluster. Before the six-step K-means process is initiated, the total number of clusters (K) must be determined. K-means cluster analysis algorithm does not consider spatial location as part of the analysis. However, the resulting cluster results can be joined to the census tract boundaries in order to create maps of the results.  
 
 ## Pre Processing
 
-The first step is to pre process the data. K-means cluster analysis requires that data be available for all census tracts included in the analysis. There are 24 census tracts which do not have data for at least one variable, these areas are primarily census tracts containing universities and army basis which do not have household level data as dormitories are considered households. 
+The first step is to pre process the data. K-means cluster analysis requires that data be available for all census tracts included in the analysis. There are 24 census tracts which do not have data for at least one variable, these areas are primarily census tracts containing universities and army basis which do not have household level data as dormitories are considered households. The census tracts without data are removed from the dataset that will be used for clustering.
 
-
-K-means cluster analysis requires that all variables use in the analysis have the same unit. I choose to scale my data using min-max scaling which is a common form of scaling used to pre process data prior to carrying out cluster analysis. Min max scaling scales the values for all variables between 0 and 1. The highest value for a variable is assigned a value of one, while the lowest value is assigned a value for 0. The formula for min/max scaling is:
+K-means cluster analysis also requires that all variables use in the analysis have the same unit. Min-max scaling which is a common form of scaling used to pre process data prior to carrying out cluster analysis is used to put all data into the same unit. Min max scaling scales the values for all variables between 0 and 1. The highest value for a variable is assigned a value of one, while the lowest value is assigned a value for 0. The formula for min/max scaling is:
 
 $$\frac{(Value - Min\_value)}{(Max\_value - Min\_value)}$$
 
@@ -780,7 +789,7 @@ basin_tracts_final_scalled <- predict(process, basin_tracts_final)
 
 ## Cluster Analysis
 
-After scaling the values we examine a correlation matrix to ensure that there is no severe multicollinearity between the final variables that will be included in the cluster analysis. The correlation matrix below uses the Pearson correlation coefficient. As shown, the correlation coefficient for all variables is bellow 0.7, indicating that there is no severe multicollineraity between the variables that will be used in the analysis. Additionally, viewing the correlation matrix also allows us to observe that the majority of variables included in the cluster analysis are positively correlated with each other.
+After scaling the values a correlation matrix is generated to ensure that there is no severe multicollinearity between the final variables that will be included in the cluster analysis. The correlation matrix shows the Pearson correlation coefficient. As shown, the correlation coefficient for all variables is below 0.7, indicating that there is no severe multicollineraity between the variables. Additionally, viewing the correlation matrix revelas that the majority of variables included in the cluster analysis are positively correlated with each other.
 
 ```{r cluster_correlation}
 
@@ -792,9 +801,9 @@ basin_tracts_final_scalled %>%
 
 ```
 
-In K-means cluster analysis the analyst must specify the target number of cluster to create. There are many different approaches and statistical techniques for determine the optimal number of clusters. The approach used here involves examining a scree plot. The scree plot plots the number of clusters against the Sum of Square Error at each cluster number. The plot is interpreted by trying to located the "elbow", or point where the drop off in the within group Sum of Squares Error to the next number of clusters is small compared to the previous number of clusters. 
+In K-means cluster analysis the analyst must specify the target number of cluster to create. There are many different approaches and statistical techniques for determine the optimal number of clusters. The approach used here involves examining a scree plot. The scree plot plots the number of clusters against the Sum of Square Error at each cluster number. The plot is interpreted by trying to locate the "elbow", or point where the drop off in the within group Sum of Squares Error to the next number of clusters is small compared to the previous number of clusters. 
 
-As shown in the scree plot below, running a cluster analysis using 1 to 25 clusters on the data for the tracts in the Delaware river basin indicates that the within group sum of square error decreases when a k value of six and a k-value of nine. After examining the cluster analysis results when using a k value of six and k value of nine I decide to present a nine cluster solution. Using the larger nine cluster solutions results in clusters that have greater distinct characteristics and also creates a cluster with a high flood risk. The six cluster solution did not create a solution with a high flood risk.  
+As shown in the scree plot below, running a cluster analysis using 1 to 25 clusters on the data for the tracts in the Delaware river basin indicates that the within group sum of square error decreases when a k value of six and a k-value of nine. After examining the cluster analysis results when using a k value of six and k value, the nine cluster solution was selected. Using the larger nine cluster solutions results in clusters that have greater distinct characteristics and also creates a cluster with a high flood risk. The six cluster solution did not create a solution with a high flood risk.  
 
 ```{r cluster_analysis}
 set.seed(789)
@@ -822,7 +831,7 @@ ggplot(data=bind)+
 
 ## Cluster Results
 
-The map below shows the cluster results for when using a k-value of nine. As shown, there is generally spatially clustering present in the location of clusters. Additionally, clusters tend to form along urban, suburban, and rural divides. For example, cluster nine is primarily rural while clusters six and two are primarily sub-urban. Clusters one and four are primarily urban.
+The map below shows the cluster results when using a k-value of nine. As shown, there is generally spatially clustering present in the location of clusters. Additionally, clusters tend to form along urban, suburban, and rural divides. For example, cluster nine is primarily rural while clusters six and two are primarily sub-urban. Clusters one and four are primarily urban.
 
 ```{r cluster_map}
 set.seed(789)
@@ -847,7 +856,7 @@ ggplot()+
 
 ## Cluster Interpretation
 
-The next step involves interpreting the cluster results and interpreting the characteristics of each cluster. The charts below show the Mean and Median Min/Max scaled value for each cluster for each variable included in the cluster analysis. As shown there often variation between the Mean and Median value of the cluster. It was decided to use the Median value for cluster interpretation as the Median will be less influenced by outliers and will more closely represent the center value of the cluster. 
+The next step involves interpreting the cluster results and interpreting the characteristics of each cluster. The charts below show the Mean and Median Min/Max scaled value for each cluster for each variable included in the cluster analysis. As shown, there is often variation between the Mean and Median value of the cluster. It was decided to use the Median value for cluster interpretation as the Median will be less influenced by outliers and will more closely represent the central value of the cluster. 
 
 ```{r graphs, fig.width=10,fig.height=4}
 cluster_medians <- results %>% select(-STATE_NAME) %>%
@@ -893,7 +902,7 @@ cluster_medians %>%
 
 Examining boxplots for each variable and cluster combinations helps provide additional information that can help with cluster interpretation. In the boxplots below, the orange line indicates the median value for all tracts in the study area, while the red line indicates the upper quantile for all tracts in the study area. This visual can help identify which clusters have median values that are well above the upper quantile. For example, the census tracts in cluster five tend to have a vulnerability to flooding that is well above the median for the study area. Additionally, the census tracts in clusters one and two tend to have a greater exposure to air quality hazards compared to the other clusters. 
 
-A key observation is that sometimes comparing the cluster median to the bain wide upper quantile may not be sufficient to capture all clusters where vulnerability tends to be above the median. For example, over 75% of census tracts in clusters five and nine have a percent of the population without a university degree that is above the basin wide median. For this reason, it makes sense to also flag census tracts where the cluster lower quantile (i.e: 25% percentile) is above the basin wide median. 
+A key observation is that sometimes comparing the cluster median to the basin wide upper quantile may not be sufficient to capture all clusters where vulnerability tends to be above the median. For example, over 75% of census tracts in clusters five and nine have a percent of the population without a university degree that is above the basin wide median. For this reason, it makes sense to also flag census tracts where the cluster lower quantile (i.e: 25% percentile) is above the basin wide median. 
 
 It also important to note the large number of outliers present for specific variables in each cluster. Many census tracts have vulnerabilities and hazard risks that are not consistent with the typical hazards and vulnerabilities in the cluster they are part of. This is especially true for flood risk where all of the clusters contain census tracts that have a vulnerability to flooding that is significantly above the basin wide 75th percentile. 
 
@@ -928,7 +937,7 @@ ggsave('outputs/image1.png')
 
 ```
 
-The table below shows the vulnerabilities and hazards that are typically present in census tracts in each cluster. A value of two indicates that the cluster lower quantile (i.e: 25th percentile) exceeds the basin wide upper quantile (i.e: 75th percentile) indicating very high vulnerability. A value of one indicates that either the cluster mean exceeds the global upper quantile or the cluster lower quantile exceeds the global mean indicating high vulnerability. As an example of how to interpret the table below, census tracts in cluster two tend to have a very high proximity to toxic wastewater emissions and a poo air quality relative to the other census tracts in the basin. Cluster three and six tend to have vulnerability that is near or below the global mean for all variables included in the analysis. 
+The table below shows the vulnerabilities and hazards that are typically present in census tracts in each cluster. A value of two indicates that the cluster lower quantile (i.e: 25th percentile) exceeds the basin wide upper quantile (i.e: 75th percentile) indicating very high vulnerability. A value of one indicates that either the cluster mean exceeds the global upper quantile or the cluster lower quantile exceeds the global mean indicating high vulnerability. As an example of how to interpret the table below, census tracts in cluster two tend to have a very high proximity to toxic wastewater emissions and a poor air quality relative to the other census tracts in the basin. Cluster three and six tend to have vulnerability that is near or below the basin wide median for all vulnerabilities included in the analysis. 
 
 ``` {r cluster_means, warning=FALSE}
 
@@ -989,11 +998,11 @@ ggplot(data=cluster_count)+
 
 ```
 
-This code is used to publish the data to Biqguery for use in an interactive dashboard created using Carto. The Carto deliverable is my story map deliverable for MUSA 8020 - Capstone Project. The Carto dashboard and Bigquery pipeline also act as a final project for MUSA 5090 - Geospatial Cloud Computing and Visualization. The Carto visualization is available [here](https://clausa.app.carto.com/map/39f234f9-2648-42cf-a2c1-f0ba9b860aec).
+This code is used to publish the data to Biqguery for use in an interactive dashboard created using Carto. The Carto deliverable is the story map deliverable for MUSA 8020 - Capstone Project. The Carto dashboard and Bigquery pipeline also act as a final project for MUSA 5090 - Geospatial Cloud Computing and Visualization. The Carto visualization is available [here](https://clausa.app.carto.com/map/39f234f9-2648-42cf-a2c1-f0ba9b860aec).
 
 # Publish to Bigquery
 
-```{r big_query, results='hide'}
+```{r bigquery, results='hide'}
 
 #This creates a table for bigquery in which the geometry is converted to 4326 and then formatted as a wkt string.
 
@@ -1076,7 +1085,7 @@ grid.arrange(map,plot,nrow=1,widths=c(6,12))
 
 **Cluster 1**
 
-Cluster one census tracts are primarily concentrated in urban areas and experience multiple vulnerabilities. Cluster 1 was flagged for seven vulnerabilities: High proximity to hazardous waste sites, high poverty rate, large population with no university degree, large minority population, high public health risk, poor air quality, and high proximity to toxic wastewater emissions.
+Cluster one census tracts are primarily concentrated in urban areas and experience multiple vulnerabilities. Cluster one was flagged for seven vulnerabilities: High proximity to hazardous waste sites, high poverty rate, large population with no university degree, large minority population, high public health risk, poor air quality, and high proximity to toxic wastewater emissions.
 
 ```{r cluster1, fig.width=12}
 cluster_profile(1)
@@ -1085,7 +1094,7 @@ cluster_profile(1)
 
 **Cluster 2**
 
-Cluster two census tracts are concentrated in Center City Philadelphia, and in Northwest suburbs. Census Tracts in Cluster 2 tend to experience two vulnerabilities: poor air quality and proximity to toxic waste water emissions. 
+Cluster two census tracts are concentrated in Center City Philadelphia and in Northwest suburbs. Census Tracts in Cluster 2 tend to experience two vulnerabilities: poor air quality and proximity to toxic waste water emissions. 
 
 ```{r cluster2, fig.width=12}
 cluster_profile(2)
@@ -1157,12 +1166,14 @@ cluster_profile(9)
 
 # Discussion and Limitations
 
-The analysis shows that k-means cluster analysis can be a useful tool for understanding environmental justice related vulnerabilities. The resulting nine clusters tend to have similar characteristics and the resulting cluster map can be used as a starting point for understanding geographic areas that tend to have similar vulnerabilities. The cluster analysis results can also be used to identify areas with multiple vulnerabilities. For example, census tracts in one and eight tend to have multiple compounding vulnerabilities. 
+The analysis shows that k-means cluster analysis can be a useful tool for understanding environmental justice related vulnerabilities. The resulting nine clusters tend to have similar characteristics and the resulting cluster map can be used as a starting point for understanding geographic areas that tend to have similar vulnerabilities. The cluster analysis results can also be used to identify areas with multiple vulnerabilities. For example, census tracts in clusters one and eight tend to have multiple compounding vulnerabilities. 
 
-However, the analysis also reveals that looking at the cluster a census tract is located in is not allways sufficient to fully understand the vulnerabilities experienced by populations residing in the census tract. For example, many clusters that have a high flood risk are not assigned to the high flood risk cluster. Users of the cluster analysis results who are using the results to target funding should examine both the cluster and the characteristics of the census tracts. A good approach for examining the latter is to look at the census tracts that have a scaled value above 0.5 for vulnerabilities of interest. 
+However, the analysis also reveals that looking at the cluster a census tract is located in is not always sufficient to fully understand the vulnerabilities experienced by populations residing in the census tract. For example, many clusters that have a high flood risk are not assigned to the high flood risk cluster. Users of the cluster analysis results who are using the results to target funding should examine both the cluster and the vulnerabilities of the census tracts funding will be targeted towards. A good approach for examining the latter is to look at the census tracts that have a scaled value above 0.5 for vulnerabilities of interest. 
 
 # Ideas for Future Analysis
 
 This analysis provides a useful starting point for applying cluster analysis techniques to environmental justice mapping. Future work could focus on a variety of different areas. Firstly, this analysis could be repeated in another geographic area with different characteristics. For example, it may be interesting to repeat the analysis in a river basin located on the West Coast. Repeating the analysis in a West Coast River Basin would allow for examining if the risk of wildfires emerges as a characteristic for any of the clusters, when the analysis is carried out in an area with a higher wildfire risk.
 
-An alternative approach to explore could be using PCA analysis combined with cluster analysis at a topic level. For example, the public health variables used to create the index could be passed through PCA, and the retained components passed to a cluster analysis with a k of two to try to identify two one clusters, one that has a high vulnerability to public health issues and another that has low vulnerability. The same steps could then be repeated for the variables included in the air quality index. For thematic vulnerabilities that are based on one variable (i.e: fire, flood risk, poverty rate, .etc), vulnerable census tracts could be identified as all census tracts that have a mix-max scaled value greater 0.5 for each vulnerability. The topic level PCA/cluster analysis approach, combined with using min-max scaling for vulnerabilities that are based one variable would allow each census tract to be assigned as vulnerable or not-vulnerable to each of the environmental justice related themes. Maps could then be created showing the total number of vulnerabilities impacting each census tract, and the specific tracts vulnerable to each of the vulnerabilities included in the analysis. 
+An alternative approach to explore could be using PCA analysis combined with cluster analysis at a topic level. For example, the public health variables used to create the index could be passed through PCA, and the retained components passed to a cluster analysis with a k of two to try to identify two clusters, one that has a high vulnerability to public health issues and another that has low vulnerability. The same steps could then be repeated for the variables included in the air quality index. 
+
+For vulnerabilities that are based on one variable (i.e: fire, flood risk, poverty rate, .etc), vulnerable census tracts could be identified as all census tracts that have a mix-max scaled value greater 0.5 for each vulnerability. The topic level PCA/cluster analysis approach, combined with using min-max scaling for vulnerabilities that are based one variable would allow each census tract to be assigned as vulnerable or not-vulnerable to each of the environmental justice related themes. Maps could then be created showing the total number of vulnerabilities impacting each census tract, and the specific tracts vulnerable to each of the vulnerabilities included in the analysis. This approach would likely help address the current interpretation challenge presented by having vulnerabilities present in a census tract that are not typical of the other census tracts in the same cluster.
