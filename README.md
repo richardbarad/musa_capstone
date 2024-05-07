@@ -20,7 +20,7 @@ The repository includes the following additional files:
 * RB_Capstone: R project
 * Data Folder: Contains data files used in the code
 
-Note that the repository contains pre-calculated data on the wildfire likelihood by census tract and data on the percent of each census tract that is located in the floodplain. In order to replicate this analysis for another study area, data on the flood hazard zone for states within the study area would need to be downloaded from [FEMA](https://msc.fema.gov/portal/advanceSearch). The code to calculate the percent of each census tract that is located within the floodplain is included in the R Markdown. Additionally, data on likelihood of a fire occurring would also need to be downloaded from [USDA](https://wildfirerisk.org/). The code to calculate the mean wildfire risk for a census tract is included in the markdown.    
+Note that the repository contains pre-calculated data on the wildfire likelihood by census tract and pre-calculated data on the percent of each census tract that is located in the floodplain. In order to replicate this analysis for another study area, data on the flood hazard zone for states within the study area would need to be downloaded from [FEMA](https://msc.fema.gov/portal/advanceSearch). The code to calculate the percent of each census tract that is located within the floodplain is included in the R Markdown. Additionally, data on likelihood of a fire occurring would also need to be downloaded from [USDA](https://wildfirerisk.org/). The code to calculate the mean wildfire risk for a census tract is included in the markdown.    
 
 
 
