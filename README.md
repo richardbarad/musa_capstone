@@ -10,7 +10,7 @@ The project aims to explore how cluster analysis techniques, specifically k-mean
 
 # Repository Overview
 
-This repository includes a file called capston_rb.Rmd which is a markdown file that contains the codebase, along with annotations describing by methodology and workflow. The markdown file includes background research, limitations of existing initiatives, research questions, results, discussion and limitations, and ideas for future analysis. The R markdown is also knitted to an html file which is also included in the repository. **The code chunk of the R Markdown file which is relevant to MUSA 5090 Geospatial Cloud Computing and Visualization starts on line 1027 and is titled bigquery.**
+This repository includes a file called capston_rb.Rmd which is a markdown file that contains the codebase, along with annotations describing by methodology and workflow. The markdown file includes background research, limitations of existing initiatives, research questions, results, discussion and limitations, and ideas for future analysis. The R markdown is also knitted to an html file which is also included in the repository. **The code chunk of the R Markdown file which is relevant to MUSA 5090 Geospatial Cloud Computing and Visualization starts on line 1018 and is titled bigquery.**
 
 The repository includes the following additional files:
 
