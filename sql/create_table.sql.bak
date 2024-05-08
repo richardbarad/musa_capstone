@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE dataset_name.results_geom
+CREATE OR REPLACE TABLE results_data.results_geom
 CLUSTER BY (geography)
 AS
 SELECT  
@@ -90,4 +90,4 @@ SELECT
     WHEN NTILE(4) OVER (ORDER BY Wastewater) = 4 THEN 'Highest 25%'
   END AS wastewater_quartile,
   st_geogfromtext(geometry, make_valid => TRUE) AS geography
-FROM dataset_name.results
+FROM results_data.results

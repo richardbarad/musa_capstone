@@ -146,8 +146,7 @@ Notes = c('Index calculated based on Particulate Matter in Air, ozone, Disel Par
 cbind(Variable,Source,Notes) %>%
   kbl(caption = "Table 2: Variables Used in Cluster Analysis") %>%
   kable_minimal() %>%
-  kable_styling('striped',stripe_color = "green")
-
+  kable_styling('striped',stripe_color = "green") 
 ```
 
 
@@ -864,6 +863,8 @@ ggplot()+
   theme_void()+
   theme(panel.background = element_rect(fill = '#d3f6ff',color='transparent'))+
   scale_fill_manual(values=pal,name='cluster')
+
+ggsave('outputs/cluster_map.png')
 ```
 
 ## Cluster Interpretation
@@ -1023,20 +1024,30 @@ results_4326 <- results %>% st_transform('EPSG:4326') %>%
   cbind(basin_tracts_4 %>% st_drop_geometry() %>% select(GEOID,NAME),.) %>%
   st_drop_geometry()
 
-#Authenticate with BigQuery using json credentials
+#Authenticate with Bigquery using json credentials
 bq_auth(path='keys/capstone-rb-b0c15ce34dbe.json')
 
+#Set project and dataset name on bigquery
+project_name <- 'capstone-rb'
+dataset_name <- 'results_data'
+
+table <- bq_table(project_name,dataset_name,table='results')
+
 #Upload Contents of results_4326 df to big_query table, overwrite existing table
-bq_table_upload("capstone-rb.results_data.results", values=results_4326, write_disposition = "WRITE_TRUNCATE")
+bq_table_upload(table, values=results_4326, write_disposition = "WRITE_TRUNCATE")
 
 # Define SQL query
 sql_file = 'sql/create_table.sql'
 sql_query <- read_file(sql_file)
 
+#Replace dataset_name with name of dataset on Bigquery
+sql_query <- gsub("dataset_name",dataset_name, sql_query)
+
 # Construct the connection to bigquery
 con <- dbConnect(
   bigrquery::bigquery(),
-  project = "capstone-rb"
+  project = project_name,
+  dataset = dataset_name
 )
 
 # Send the query to BigQuery
