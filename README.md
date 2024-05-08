@@ -10,7 +10,7 @@ The project aims to explore how cluster analysis techniques, specifically k-mean
 
 # Repository Overview
 
-This repository includes a file called capston_rb.Rmd which is a markdown file that contains the codebase, along with annotations describing by methodology and workflow. The markdown file includes background research, limitations of existing initiatives, research questions, results, discussion and limitations, and ideas for future analysis. The R markdown is also knitted to an html file which is also included in the repository. **The code chunk of the R Markdown file which is relevant to MUSA 5090 Geospatial Cloud Computing and Visualization starts on line 1005 and is titled bigquery.**
+This repository includes a file called capston_rb.Rmd which is a markdown file that contains the codebase, along with annotations describing by methodology and workflow. The markdown file includes background research, limitations of existing initiatives, research questions, results, discussion and limitations, and ideas for future analysis. The R markdown is also knitted to an html file which is also included in the repository. **The code chunk of the R Markdown file which is relevant to MUSA 5090 Geospatial Cloud Computing and Visualization starts on line 1027 and is titled bigquery.**
 
 The repository includes the following additional files:
 
@@ -20,7 +20,11 @@ The repository includes the following additional files:
 * RB_Capstone: R project
 * Data Folder: Contains data files used in the code
 
-Note that the repository contains pre-calculated data on the wildfire likelihood by census tract and pre-calculated data on the percent of each census tract that is located in the floodplain. In order to replicate this analysis for another study area, data on the flood hazard zone for states within the study area would need to be downloaded from [FEMA](https://msc.fema.gov/portal/advanceSearch). The code to calculate the percent of each census tract that is located within the floodplain is included in the R Markdown. Additionally, data on likelihood of a fire occurring would also need to be downloaded from [USDA](https://wildfirerisk.org/). The code to calculate the mean wildfire risk for a census tract is included in the markdown.    
+# Updating the Analysis or Replicating for a New Geographic Area
+
+The repository contains pre-calculated data on the wildfire likelihood by census tract and pre-calculated data on the percent of each census tract that is located in the floodplain. In order to replicate this analysis for another study area, data on the flood hazard zone for states within the study area would need to be downloaded from [FEMA](https://msc.fema.gov/portal/advanceSearch). The code to calculate the percent of each census tract that is located within the floodplain is included in the R Markdown. Additionally, data on likelihood of a fire occurring would also need to be downloaded from [USDA](https://wildfirerisk.org/). The code to calculate the mean wildfire risk for a census tract using zonal statistics is included in the markdown. The data from the CDC, Census, and/or EJ Screen can be swapped for another geography by updating the requests in the RMarkdown to pull data for the states of interest.
+
+To update the BigQuery publishing process of the R script it is necessary to update the path to the json file with the credentials for a user that has permissions to publish to Bigquery dataset the data will be published to. Additionaly, the name of the project and dataset should also be updated to reference the name of the project and dataset where the table will be published.
 
 
 
