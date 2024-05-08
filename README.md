@@ -15,7 +15,7 @@ This repository includes a file called capston_rb.Rmd which is a markdown file t
 The repository includes the following additional files:
 
 * The outputs folder contains png images of the visuals which are included in the R markdown.
-* The SQL folder includes the .sql query which is used to create the table used in the Carto Dashboard. 
+* The SQL folder includes the .sql query which is used to create the Biguquery table for the Carto Dashboard. 
 * The Capstone_flow_chart.png file is a flow chart showing the steps involved in my analysis, and is included in the Markdown. 
 * RB_Capstone: R project
 * Data Folder: Contains data files used in the code
